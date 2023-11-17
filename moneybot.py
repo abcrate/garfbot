@@ -13,13 +13,12 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user.name} running gpt-3.5-turbo-0613.")
+    print(f"Logged in as {client.user.name} running gpt-3.5-turbo-0613.", flush=True)
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
-
     if message.content.lower().startswith("hey money") or isinstance(message.channel, discord.DMChannel):
         question = message.content[9:] if message.content.lower().startswith("hey money") else message.content
         try:

@@ -12,15 +12,15 @@ from datetime import datetime
 from collections import defaultdict
 from operator import itemgetter
 
+openaikey = config.OPENAI_TOKEN
+gapikey = config.GIF_TOKEN
+garfkey = config.GARFBOT_TOKEN
+
 intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
 intents.message_content = True
 client = discord.Client(intents=intents)
-
-openaikey = config.OPENAI_TOKEN
-gapikey = config.GIF_TOKEN
-garfkey = config.GARFBOT_TOKEN
 
 @client.event
 async def on_ready():
@@ -141,6 +141,7 @@ async def on_message(message):
         search_term = message.content[8:]
         await send_gif(message, search_term)
 
+    # Army of Dawn Server
     if message.guild and message.guild.id == 719605634772893757:
 
         if "meow" in message.content.lower():

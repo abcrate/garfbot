@@ -4,16 +4,16 @@ import discord
 import os
 
 openai.api_key = config.OPENAI_TOKEN
+jonkey = config.JONBOT_TOKEN
 
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
 client = discord.Client(intents=intents)
-jonkey = config.JONBOT_TOKEN
 
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user.name} running gpt-3.5-turbo-0613.")
+    print(f"Logged in as {client.user.name} running gpt-3.5-turbo-0613.", flush=True)
 
 @client.event
 async def on_message(message):
