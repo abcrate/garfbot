@@ -5,6 +5,7 @@ import os
 
 openai.api_key = config.OPENAI_TOKEN
 jonkey = config.JONBOT_TOKEN
+model = "gpt-3.5-turbo"
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -13,7 +14,7 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user.name} running gpt-3.5-turbo-0613.", flush=True)
+    print(f"Logged in as {client.user.name} running gpt-3.5-turbo.", flush=True)
 
 @client.event
 async def on_message(message):
@@ -23,7 +24,7 @@ async def on_message(message):
         question = message.content[7:] if message.content.lower().startswith("hey jon") else message.content
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model=model,
                 messages=[
                         {"role": "system", "content": "Pretend you are friendly Jon Arbuckle."},
                         {"role": "user", "content": f"{question}"}

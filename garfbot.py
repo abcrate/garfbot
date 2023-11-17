@@ -15,6 +15,8 @@ from operator import itemgetter
 openaikey = config.OPENAI_TOKEN
 gapikey = config.GIF_TOKEN
 garfkey = config.GARFBOT_TOKEN
+txtmodel = "gpt-3.5-turbo"
+imgmodel = "dall-e-3"
 
 intents = discord.Intents.default()
 intents.members = True
@@ -47,7 +49,7 @@ async def generate_chat_response(question):
     try:
         client = AsyncOpenAI(api_key = openaikey)
         response = await client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=txtmodel,
             messages=[
             	{"role": "system", "content": "Pretend you are sarcastic Garfield."},
             	{"role": "user", "content": f"{question}"}
@@ -70,7 +72,7 @@ async def generate_image(prompt):
     try:
         client = AsyncOpenAI(api_key = openaikey)
         response = await client.images.generate(
-            model="dall-e-3",
+            model=imgmodel,
             prompt=prompt,
             n=1,
             size="1024x1024"
