@@ -112,10 +112,11 @@ async def process_image_requests():
                         image_data = await resp.read()
                         timestamp = message.created_at.strftime('%Y%m%d%H%M%S')
                         filename = f"images/{timestamp}_generated_image.png"
+                        new_filename = f"{timestamp}_generated_image.png" # There is probably a better way to do this.
                         with open(filename, "wb") as f:
                             f.write(image_data)
                         with open(filename, "rb") as f:
-                            await message.channel.send(file=discord.File(f))
+                            await message.channel.send(file=discord.File(f, new_filename))
                     else:
                         await message.channel.send("`GarfBot Error: Odie`")
             else:
