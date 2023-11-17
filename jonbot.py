@@ -21,18 +21,18 @@ async def on_message(message):
         return
     if message.content.lower().startswith("hey jon") or isinstance(message.channel, discord.DMChannel):
         question = message.content[7:] if message.content.lower().startswith("hey jon") else message.content
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                    {"role": "system", "content": "Pretend you are friendly Jon Arbuckle."},
-                    {"role": "user", "content": f"{question}"}
-                ],
-            max_tokens=400
-        )
-        answer = response['choices'][0]['message']['content']
-        answer = answer.replace("AI language model", "American citizen")
-        answer = answer.replace("language model AI", "citizen of the United States")
         try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                        {"role": "system", "content": "Pretend you are friendly Jon Arbuckle."},
+                        {"role": "user", "content": f"{question}"}
+                    ],
+                max_tokens=400
+            )
+            answer = response['choices'][0]['message']['content']
+            answer = answer.replace("AI language model", "American citizen")
+            answer = answer.replace("language model AI", "citizen of the United States")
             await message.channel.send(answer)
         except Exception as e:
             e = str(e)
