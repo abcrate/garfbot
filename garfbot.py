@@ -12,6 +12,9 @@ from datetime import datetime
 from collections import defaultdict
 from operator import itemgetter
 
+
+
+# Bot setup and init etc.
 openaikey = config.OPENAI_TOKEN
 gapikey = config.GIF_TOKEN
 garfkey = config.GARFBOT_TOKEN
@@ -29,6 +32,8 @@ async def on_ready():
     asyncio.create_task(process_image_requests())
     print(f"Logged in as {client.user.name} running gpt-3.5-turbo.", flush=True)
 
+
+
 # MeowCounts File
 counts_file = "meow_counts.json"
 meow_counts = defaultdict(int)
@@ -43,6 +48,8 @@ try:
         user_stats = json.load(f)
 except FileNotFoundError:
     user_stats = {}
+
+
 
 # GarfChats
 async def generate_chat_response(question):
@@ -66,6 +73,8 @@ async def generate_chat_response(question):
     except Exception as e:
         print(e, flush=True)
         return f"`GarfBot Error: Lasagna`"
+
+
 
 # GarfPics
 async def generate_image(prompt):
@@ -114,7 +123,9 @@ async def process_image_requests():
             image_request_queue.task_done()
             await asyncio.sleep(2)
 
-# Listen for messages
+
+
+# Message Listener
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -143,7 +154,7 @@ async def on_message(message):
         search_term = message.content[8:]
         await send_gif(message, search_term)
 
-    # Army of Dawn Server
+    # Army of Dawn Server only!!
     if message.guild and message.guild.id == 719605634772893757:
 
         if "meow" in message.content.lower():
@@ -167,13 +178,11 @@ async def on_message(message):
                 await message.channel.send(embed=embed)
 
         if message.content.lower() == "checking in":
-            # Check if user has already checked in
             user_id = str(message.author.id)
             if user_id in user_stats and user_stats[user_id]["check_in_time"] is not None:
                 await message.channel.send(f"{message.author.mention} You are already checked in. Please check out first.")
                 return
 
-            # Record check-in time and add user to user_stats if not already there
             check_in_time = datetime.utcnow().timestamp()
             if user_id not in user_stats:
                 user_stats[user_id] = {"check_ins": 0, "total_time": 0, "check_in_time": None}
@@ -181,13 +190,11 @@ async def on_message(message):
             await message.channel.send(f"{message.author.mention} You have been checked in. Please mute your microphone.")
 
         elif message.content.lower() == "checking out":
-            # Check if user has already checked in
             user_id = str(message.author.id)
             if user_id not in user_stats or user_stats[user_id]["check_in_time"] is None:
                 await message.channel.send(f"{message.author.mention} You have not checked in yet. Please check in first.")
                 return
 
-            # Record check-out time and update user stats
             check_out_time = datetime.utcnow().timestamp()
             check_in_time = user_stats[user_id]["check_in_time"]
             time_delta = check_out_time - check_in_time
@@ -195,7 +202,6 @@ async def on_message(message):
             user_stats[user_id]["total_time"] += time_delta
             user_stats[user_id]["check_in_time"] = None
 
-            # Save user stats to file
             with open("user_stats.json", "w") as f:
                 json.dump(user_stats, f)
             await message.channel.send(f"{message.author.mention} You have been checked out. Your session was {time_delta:.2f} seconds.")
@@ -222,7 +228,9 @@ async def on_message(message):
                 stats_embed.add_field(name=field, value="\n".join(values), inline=True)
             await message.channel.send(embed=stats_embed)
 
-# GarfGifs
+
+
+# GarfGifs (I put this at the bottom bc it looks messy)
 @client.event
 async def send_gif(message, search_term):
     lmt = 50
@@ -239,9 +247,11 @@ async def send_gif(message, search_term):
     else:
         await message.channel.send(f"`Oops, something went wrong. Error code: {r.status_code}`")
 
-# Run GarfBot
+
+
+# Run GarfBot :)
 try:
     client.run(garfkey)
 except Exception as e:
         e = str(e)
-        print(f"GarfBot Error: {e}")
+        print(f"GarfBot Init Error: {e}", flush=True)
