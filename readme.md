@@ -18,4 +18,12 @@ To get started, clone this repo and create a `config.py` file in GarfBot's root 
     OPENAI_TOKEN = "token"
     GIF_TOKEN = "token"
 ```
-If you want to configure a more secure setup go ahead, feel free to pipe any questions to my email address or /dev/null.
+If you want to configure a more secure setup go ahead.
+
+Next I recommend building a docker image for each bot using the included DockerFile as a template. Run each container binding /usr/src/app to GarfBot's CWD.
+
+Example:
+```console
+    crate@raspberrypi:~/garfbot $ docker build -t garfbot .
+    crate@raspberrypi:~/garfbot $ docker run -d --restart always -v $PWD:/usr/src/app --name garfbot garfbot
+```
