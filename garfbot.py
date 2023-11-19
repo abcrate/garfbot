@@ -27,11 +27,11 @@ intents.messages = True
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+
 @client.event
 async def on_ready():
-    asyncio.create_task(process_image_requests()) # Important
-    print(f"Logged in as {client.user.name} running gpt-3.5-turbo.", flush=True)
-
+    asyncio.create_task(process_image_requests()) # Important!
+    print(f"Logged in as {client.user.name} running {txtmodel} {imgmodel}.", flush=True)
 
 
 # Json Handling
