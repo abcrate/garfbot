@@ -29,26 +29,24 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    asyncio.create_task(process_image_requests())
+    asyncio.create_task(process_image_requests()) # Important
     print(f"Logged in as {client.user.name} running gpt-3.5-turbo.", flush=True)
 
 
 
-# MeowCounts File
-counts_file = "meow_counts.json"
-meow_counts = defaultdict(int)
-if os.path.isfile(counts_file):
-    with open(counts_file, "r") as f:
-        meow_counts.update(json.load(f))
-elif os.path.exists(counts_file):
-    with open(counts_file, "r") as f:
-        meow_counts = json.load(f)
-try:
-    with open("user_stats.json", "r") as f:
-        user_stats = json.load(f)
-except FileNotFoundError:
-    user_stats = {}
+# Json Handling
+meows_file = "meow_counts.json"
+stats_file = "user_stats.json"
 
+def json_load(file_path, default):
+    if os.path.isfile(file_path):
+        with open(file_path, "r") as f:
+            return json.load(f)
+    else:
+        return default
+
+meow_counts = defaultdict(int, json_load(meows_file, {}))
+user_stats = json_load(stats_file, {})
 
 
 # GarfChats
@@ -73,7 +71,6 @@ async def generate_chat_response(question):
     except Exception as e:
         print(e, flush=True)
         return f"`GarfBot Error: Lasagna`"
-
 
 
 # GarfPics
@@ -163,7 +160,7 @@ async def on_message(message):
 
             meow_counts[str(message.author.id)] += 1
 
-            with open(counts_file, "w") as f:
+            with open(meows_file, "w") as f:
                 json.dump(dict(meow_counts), f)
 
             if message.content.lower() == "meowcount":
