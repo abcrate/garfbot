@@ -21,6 +21,7 @@ GIF_TOKEN = "token"
 If you want to configure a more secure setup, go ahead.
 
 Next, I recommend building a docker image for each bot using the included DockerFile as a template. Run each container binding /usr/src/app to GarfBot's CWD.
+A terraform file has been included to launch all three containers, or you can do it manually.
 
 Example:
 ```console
