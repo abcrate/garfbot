@@ -6,15 +6,32 @@ import aiohttp
 import asyncio
 import discord
 import requests
+import logging
 import random
 from openai import AsyncOpenAI
 from datetime import datetime
 from collections import defaultdict
 from operator import itemgetter
+from logging.handlers import TimedRotatingFileHandler
 
 
+# Log setup
+garflog = logging.getLogger('garfbot_logger')
+garflog.setLevel(logging.INFO)
+handler = TimedRotatingFileHandler(
+    'garfbot.log',
+    when='midnight',
+    interval=1,
+    backupcount=7
+    )
+formatter=logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+    )
+handler.setFormatter(formatter)
 
-# Bot setup and init etc.
+
+# Bot setup
 openaikey = config.OPENAI_TOKEN
 gapikey = config.GIF_TOKEN
 garfkey = config.GARFBOT_TOKEN
@@ -25,13 +42,14 @@ intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
 intents.message_content = True
-client = discord.Client(intents=intents)
+garfbot = discord.Client(intents=intents)
 
 
-@client.event
+@garfbot.event
 async def on_ready():
     asyncio.create_task(process_image_requests()) # Important!
-    print(f"Logged in as {client.user.name} running {txtmodel} {imgmodel}.", flush=True)
+    garflog.info(f"Logged in as {garfbot.user.name} running {txtmodel} {imgmodel}.")
+    print(f"Logged in as {garfbot.user.name} running {txtmodel} {imgmodel}.", flush=True)
 
 
 # Json Handling
@@ -88,9 +106,11 @@ async def generate_image(prompt):
     except openai.BadRequestError as e:
         return f"`GarfBot Error: ({e.status_code}) - Your request was rejected as a result of our safety system.`"
     except openai.InternalServerError as e:
+        garflog.error(e)
         print(e, flush=True)
-        return f"`GarfBot Error: {e.status_code} - Monday`"
+        return f"`GarfBot Error: ({e.status_code}) - Monday`"
     except Exception as e:
+        garflog.error(e)
         print(e, flush=True)
         return f"`GarfBot Error: Lasagna`"
 
@@ -108,12 +128,12 @@ async def process_image_requests():
                     if resp.status == 200:
                         image_data = await resp.read()
                         timestamp = message.created_at.strftime('%Y%m%d%H%M%S')
-                        filename = f"images/{timestamp}_generated_image.png"
-                        new_filename = f"{timestamp}_generated_image.png" # There is probably a better way to do this.
-                        with open(filename, "wb") as f:
+                        save_filename = f"images/{timestamp}_generated_image.png"
+                        send_filename = f"{timestamp}_generated_image.png" # There is probably a better way to do this.
+                        with open(save_filename, "wb") as f:
                             f.write(image_data)
-                        with open(filename, "rb") as f:
-                            await message.channel.send(file=discord.File(f, new_filename))
+                        with open(save_filename, "rb") as f:
+                            await message.channel.send(file=discord.File(f, send_filename))
                     else:
                         await message.channel.send("`GarfBot Error: Odie`")
             else:
@@ -122,11 +142,10 @@ async def process_image_requests():
             await asyncio.sleep(2)
 
 
-
 # Message Listener
-@client.event
+@garfbot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == garfbot.user:
         return
 
     if message.content.lower().startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
@@ -138,6 +157,7 @@ async def on_message(message):
         user = message.author.name
         server = message.guild.name if message.guild else "Direct Message"
         prompt = message.content[8:]
+        garflog.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
         print(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}", flush=True)
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await image_request_queue.put({'message': message, 'prompt': prompt})
@@ -156,7 +176,8 @@ async def on_message(message):
     if message.guild and message.guild.id == 719605634772893757:
 
         if "meow" in message.content.lower():
-            print(f"Meow detected: {message.content}")
+            garflog.info(f"Meow detected! {message.author.name} said: {message.content}")
+            print(f"Meow detected! {message.author.name} said: {message.content}", flush=True)
 
             meow_counts[str(message.author.id)] += 1
 
@@ -171,7 +192,7 @@ async def on_message(message):
                 top_meowers = sorted(meow_counts.items(), key=itemgetter(1), reverse=True)[:10]
                 embed = discord.Embed(title="Top Meowers :cat:", color=0x000000)
                 for i, (user_id, meow_count) in enumerate(top_meowers):
-                    user = await client.fetch_user(int(user_id))
+                    user = await garfbot.fetch_user(int(user_id))
                     embed.add_field(name=f"{i+1}. {user.name}", value=f"{meow_count} meows", inline=False)
                 await message.channel.send(embed=embed)
 
@@ -215,10 +236,10 @@ async def on_message(message):
                     minutes, total_time_seconds = divmod(total_time_seconds, 60)
                     seconds, fractions = divmod(total_time_seconds, 1)
                     fractions_str = f"{fractions:.3f}"[2:]
-                    username = client.get_user(int(user_id)).name
+                    username = garfbot.get_user(int(user_id)).name
                     table_rows.append([username, str(stats["check_ins"]), f"{int(hours)}h {int(minutes)}m {int(seconds)}s {fractions_str}ms"])
                 else:
-                    username = client.get_user(int(user_id)).name
+                    username = garfbot.get_user(int(user_id)).name
                     table_rows.append([username, "Currently checked in", "-"])
             table_columns = list(zip(*table_rows[1:]))
             table_fields = table_rows[0]
@@ -227,9 +248,8 @@ async def on_message(message):
             await message.channel.send(embed=stats_embed)
 
 
-
-# GarfGifs (I put this at the bottom bc it looks messy)
-@client.event
+# GarfGifs (I put this at the bottom because it looks messy)
+@garfbot.event
 async def send_gif(message, search_term):
     lmt = 50
     ckey = "garfbot"
@@ -246,10 +266,17 @@ async def send_gif(message, search_term):
         await message.channel.send(f"`Oops, something went wrong. Error code: {r.status_code}`")
 
 
+# discord.py error handling
+@garfbot.event
+async def on_error(event, *args, **kwargs):
+    garflog.error(f'GarfBot Error: {event}')
+    print(f'GarfBot Error: {event}', flush=True)
 
-# Run GarfBot :)
+
+# Run GarfBot!
 try:
-    client.run(garfkey)
+    garfbot.run(garfkey)
 except Exception as e:
         e = str(e)
+        garflog.error(f"GarfBot Init Error: {e}")
         print(f"GarfBot Init Error: {e}", flush=True)
