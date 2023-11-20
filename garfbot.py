@@ -22,7 +22,8 @@ handler = TimedRotatingFileHandler(
     'garfbot.log',
     when='midnight',
     interval=1,
-    backupCount=7
+    backupCount=7,
+    delay=True # Flush output immediately
     )
 formatter=logging.Formatter(
     '%(asctime)s [%(levelname)s] %(message)s',
