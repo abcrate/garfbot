@@ -37,7 +37,7 @@ logger.addHandler(handler)
 openaikey = config.OPENAI_TOKEN
 gapikey = config.GIF_TOKEN
 garfkey = config.GARFBOT_TOKEN
-txtmodel = "gpt-3.5-turbo"
+txtmodel = "gpt-4o-mini"
 imgmodel = "dall-e-3"
 
 intents = discord.Intents.default()
@@ -50,8 +50,8 @@ garfbot = discord.Client(intents=intents)
 @garfbot.event
 async def on_ready():
     asyncio.create_task(process_image_requests()) # Important!
-    logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} {imgmodel}.")
-    print(f"Logged in as {garfbot.user.name} running {txtmodel} {imgmodel}.", flush=True)
+    logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
+    print(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.", flush=True)
 
 
 # Json Handling
