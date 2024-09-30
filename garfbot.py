@@ -8,6 +8,7 @@ import aiohttp
 import asyncio
 import discord
 import requests
+import ipaddress
 import subprocess
 from base64 import b64encode
 from openai import AsyncOpenAI
@@ -47,6 +48,18 @@ intents.members = True
 intents.messages = True
 intents.message_content = True
 garfbot = discord.Client(intents=intents)
+
+
+# Network Utils Setup
+def is_private(target):
+    try:
+        ip_obj = ipaddress.ip_address(target)
+        if ip_obj.is_private:
+            return True
+    except ValueError:
+        if "crate.lan" in target.lower():
+            return True
+    return False
 
 
 # Kroger Setup
@@ -224,9 +237,49 @@ async def on_message(message):
     if message.content.lower().startswith("garfping "):
         try:
             query = message.content.split()
+            user = message.author.name
+            server = message.guild.name if message.guild else "Direct Message"
             target = query[-1]
-            result = subprocess.run(['ping', '-c', '1', target], capture_output=True, text=True)
-            await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+            print(f"Ping Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            if is_private(target):
+                rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                await message.channel.send(rejection)
+            else:
+                result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
+                await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+        except Exception as e:
+            await message.channel.send(f"`GarfBot Error: {str(e)}`")
+
+    if message.content.lower().startswith("garfdns "):
+        try:
+            query = message.content.split()
+            user = message.author.name
+            server = message.guild.name if message.guild else "Direct Message"
+            target = query[-1]
+            print(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            if is_private(target):
+                rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                await message.channel.send(rejection)
+            else:
+                result = subprocess.run(['nslookup', target], capture_output=True, text=True)
+                await message.channel.send(f"`NSLookup result for {target}: {result.stdout}`")
+        except Exception as e:
+            await message.channel.send(f"`GarfBot Error: {str(e)}`")
+
+    if message.content.lower().startswith("garfhack "):
+        try:
+            query = message.content.split()
+            user = message.author.name
+            server = message.guild.name if message.guild else "Direct Message"
+            target = query[-1]
+            print(f"Nmap Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            if is_private(target):
+                rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                await message.channel.send(rejection)
+            else:
+                await message.channel.send(f"`Scanning {target}...`")
+                result = subprocess.run(['nmap', '-Pn', '-O', '-v', target], capture_output=True, text=True)
+                await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
