@@ -34,9 +34,6 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-
-
-
 # Bot Setup
 openaikey = config.OPENAI_TOKEN
 gapikey = config.GIF_TOKEN
@@ -204,9 +201,7 @@ async def on_message(message):
         try:
             kroken = kroger_token()
             _, product, zipcode = message.content.split()
-            access_token = get_kroger_access_token()
-            result = search_product(product, zipcode, access_token)
-
+            result = search_product(product, zipcode, kroken)
             store_name = result['data'][0]['items'][0]['store']['location']['name']
             products = result['data']
             kroger_items = f"Prices for {product} near {zipcode} at {store_name}:\n"
