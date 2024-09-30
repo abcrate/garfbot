@@ -237,6 +237,8 @@ async def on_message(message):
     if message.content.lower().startswith("garfping "):
         try:
             query = message.content.split()
+            user = message.author.name
+            server = message.guild.name if message.guild else "Direct Message"
             target = query[-1]
             print(f"Ping Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
@@ -251,6 +253,8 @@ async def on_message(message):
     if message.content.lower().startswith("garfdns "):
         try:
             query = message.content.split()
+            user = message.author.name
+            server = message.guild.name if message.guild else "Direct Message"
             target = query[-1]
             print(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
