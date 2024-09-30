@@ -239,7 +239,7 @@ async def on_message(message):
             query = message.content.split()
             target = query[-1]
             if is_private(target):
-                rejection = await generate_chat_response("Hey Garfield, I am hacking your computer network.")
+                rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
             else:
                 result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
@@ -247,7 +247,18 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
-
+    if message.content.lower().startswith("garfdns "):
+        try:
+            query = message.content.split()
+            target = query[-1]
+            if is_private(target):
+                rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                await message.channel.send(rejection)
+            else:
+                result = subprocess.run(['nslookup', target], capture_output=True, text=True)
+                await message.channel.send(f"`NSLookup result for {target}: {result.stdout}`")
+        except Exception as e:
+            await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Kroger Shopping
     if message.content.lower().startswith("garfshop "):
