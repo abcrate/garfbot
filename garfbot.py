@@ -237,7 +237,7 @@ async def on_message(message):
             for item in sorted_products:
                 product_name = item['description']
                 price = item['items'][0]['price']['regular']
-                response += f"- `${price}`: {product_name}: \n"
+                response += f"- `${price}`: {product_name} \n"
             await message.channel.send(response)
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
