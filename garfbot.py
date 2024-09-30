@@ -266,6 +266,22 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
+    if message.content.lower().startswith("garfhack "):
+        try:
+            query = message.content.split()
+            user = message.author.name
+            server = message.guild.name if message.guild else "Direct Message"
+            target = query[-1]
+            print(f"Nmap Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            if is_private(target):
+                rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                await message.channel.send(rejection)
+            else:
+                result = subprocess.run(['nmap', '-A', '-Pn', target], capture_output=True, text=True)
+                await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+        except Exception as e:
+            await message.channel.send(f"`GarfBot Error: {str(e)}`")
+
     # Kroger Shopping
     if message.content.lower().startswith("garfshop "):
         try:
