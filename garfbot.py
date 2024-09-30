@@ -1,13 +1,14 @@
 import os
 import json
 import config
+import random
 import openai
+import logging
 import aiohttp
 import asyncio
 import discord
 import requests
-import logging
-import random
+import subprocess
 from base64 import b64encode
 from openai import AsyncOpenAI
 from datetime import datetime
@@ -219,6 +220,15 @@ async def on_message(message):
     if message.content.lower().startswith("garfgif "):
         search_term = message.content[8:]
         await send_gif(message, search_term)
+    
+    if message.content.lower().startswith("garfping "):
+        try:
+            query = message.content.split()
+            target = query[-1]
+            result = subprocess.run(['ping', '-c', '1', target], capture_output=True, text=True)
+            await message.channel.send(f`"Ping result for {target}: {result.stdout}`")
+        except Exception as e:
+            await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Kroger Shopping
     if message.content.lower().startswith("garfshop "):
