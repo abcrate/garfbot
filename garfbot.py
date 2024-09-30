@@ -240,7 +240,7 @@ async def on_message(message):
                 response += f"- `${price}`: {product_name}: \n"
             await message.channel.send(response)
         except Exception as e:
-            await message.channel.send(f"Error: {str(e)}")
+            await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Army of Dawn Server only!!
     if message.guild and message.guild.id == 719605634772893757:
