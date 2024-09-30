@@ -277,8 +277,8 @@ async def on_message(message):
                 rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
             else:
-                await message.channel.send(f"Scanning {target}, hold on a sec...")
-                result = subprocess.run(['nmap', '-A', '-Pn', target], capture_output=True, text=True)
+                await message.channel.send(f"`Scanning {target}...`")
+                result = subprocess.run(['nmap', '-Pn', '-O', '-v', target], capture_output=True, text=True)
                 await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
