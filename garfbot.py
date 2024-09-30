@@ -15,7 +15,7 @@ from operator import itemgetter
 from logging.handlers import TimedRotatingFileHandler
 
 
-# Log setup
+# Log Setup
 logger = logging.getLogger('garflog')
 logger.setLevel(logging.INFO)
 handler = TimedRotatingFileHandler(
@@ -33,7 +33,10 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-# Bot setup
+
+
+
+# Bot Setup
 openaikey = config.OPENAI_TOKEN
 gapikey = config.GIF_TOKEN
 garfkey = config.GARFBOT_TOKEN
@@ -47,14 +50,28 @@ intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
 
-@garfbot.event
-async def on_ready():
-    asyncio.create_task(process_image_requests()) # Important!
-    logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
-    print(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.", flush=True)
+# Kroger Setup
+client_id = config.CLIENT_ID
+client_secret = config.CLIENT_SECRET
+
+auth = b64encode(f"{client_id}:{client_secret}".encode()).decode()
+
+def kroger_token():
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': f'Basic {auth}'
+    }
+    
+    response = requests.post('https://api.kroger.com/v1/connect/oauth2/token', headers=headers, data={
+        'grant_type': 'client_credentials',
+        'scope': 'product.compact'
+    })
+
+    response.raise_for_status()
+    return response.json()['access_token']
 
 
-# Json Handling
+# Meows Json Handling
 meows_file = "meow_counts.json"
 stats_file = "user_stats.json"
 
@@ -67,6 +84,14 @@ def json_load(file_path, default):
 
 meow_counts = defaultdict(int, json_load(meows_file, {}))
 user_stats = json_load(stats_file, {})
+
+
+# GarfBot Ready!
+@garfbot.event
+async def on_ready():
+    asyncio.create_task(process_image_requests()) # Important!
+    logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
+    print(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.", flush=True)
 
 
 # GarfChats
@@ -174,6 +199,25 @@ async def on_message(message):
         search_term = message.content[8:]
         await send_gif(message, search_term)
 
+    if message.content.lower().startswith("garfshop "):
+        try:
+            kroken = kroger_token()
+            _, product, zipcode = message.content.split()
+            access_token = get_kroger_access_token()
+            result = search_product(product, zipcode, access_token)
+
+            store_name = result['data'][0]['items'][0]['store']['location']['name']
+            products = result['data']
+            kroger_items = f"Prices for {product} near {zipcode} at {store_name}:\n"
+            for item in products:
+                product_name = item['description']
+                price = item['items'][0]['price']['regular']
+                kroger_items += f"{product_name}: ${price}\n"
+            await message.channel.send(kroger_items)
+
+        except Exception as e:
+            await message.channel.send(f"Error: {str(e)}")
+
     # Army of Dawn Server only!!
     if message.guild and message.guild.id == 719605634772893757:
 
@@ -250,7 +294,7 @@ async def on_message(message):
             await message.channel.send(embed=stats_embed)
 
 
-# GarfGifs (I put this at the bottom because it looks messy)
+# GarfGifs
 @garfbot.event
 async def send_gif(message, search_term):
     lmt = 50
@@ -268,7 +312,7 @@ async def send_gif(message, search_term):
         await message.channel.send(f"`Oops, something went wrong. Error code: {r.status_code}`")
 
 
-# discord.py error handling
+# discord.py Error Handling
 @garfbot.event
 async def on_error(event, *args, **kwargs):
     logger.error(f'GarfBot Error: {event}')
