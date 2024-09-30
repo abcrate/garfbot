@@ -8,6 +8,7 @@ import aiohttp
 import asyncio
 import discord
 import requests
+import ipaddress
 import subprocess
 from base64 import b64encode
 from openai import AsyncOpenAI
