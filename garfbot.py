@@ -66,15 +66,26 @@ def kroger_token():
     })
 
     response.raise_for_status()
-    return response.json()['access_token']
+    return response.json()['kroken']
 
-def search_product(product, zipcode, access_token):
+def find_store(zipcode, kroken):
     headers = {
-        'Authorization': f'Bearer {access_token}',
+        'Authorization': f'Bearer {kroken}',
+    }
+    params = {
+        'filter.zipCode.near': zipcode,
+        'filter.limit': 1,
+    }
+    response = requests.get('https://api.kroger.com/v1/locations', headers=headers, params=params)
+    return response.json()
+
+def search_product(product, loc_id, kroken):
+    headers = {
+        'Authorization': f'Bearer {kroken}',
     }
     params = {
         'filter.term': product,
-        'filter.locationId': zipcode,
+        'filter.locationId': loc_id,
         'filter.limit': 10
     }
     response = requests.get('https://api.kroger.com/v1/products', headers=headers, params=params)
@@ -141,7 +152,7 @@ async def generate_image(prompt):
         image_url = response.data[0].url
         return image_url
     except openai.BadRequestError as e:
-        return f"`GarfBot Error: ({e.status_code}) - Your request was rejected as a result of our safety system.`"
+        return f"`GarfBot Error: ({e.status_code}) - Your request was rejected as a product_query of our safety system.`"
     except openai.InternalServerError as e:
         logger.error(e)
         print(e, flush=True)
@@ -213,10 +224,12 @@ async def on_message(message):
         try:
             kroken = kroger_token()
             _, product, zipcode = message.content.split()
-            result = search_product(product, zipcode, kroken)
-            store_name = result['data'][0]['items'][0]['store']['location']['name']
-            products = result['data']
-            kroger_items = f"Prices for {product} near {zipcode} at {store_name}:\n"
+            loc_data = find_store(zipcode, kroken)
+            loc_id = loc_data['data'][0]['locationId']
+            store_name = loc_data['data'][0]['name']
+            product_query = search_product(product, loc_id, kroken)
+            products = product_query['data']
+            kroger_items = f"Prices for `{product}` at `{store_name}`near `{zipcode}`:\n"
             for item in products:
                 product_name = item['description']
                 price = item['items'][0]['price']['regular']
@@ -310,7 +323,7 @@ async def send_gif(message, search_term):
     r = requests.get(f"https://tenor.googleapis.com/v2/search?q={search_term}&key={gapikey}&client_key={ckey}&limit={lmt}")
     if r.status_code == 200:
         top_50gifs = json.loads(r.content)
-        gif_url = random.choice(top_50gifs["results"])["itemurl"]
+        gif_url = random.choice(top_50gifs["product_querys"])["itemurl"]
         print(gif_url)
         try:
             await message.channel.send(gif_url)
