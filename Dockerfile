@@ -2,7 +2,6 @@ FROM python:3.11.10-bookworm
 
 WORKDIR /usr/src/app
 
-COPY ./requirements.txt .
 RUN apt update
 RUN apt install -y iputils-ping
 RUN apt install -y dnsutils
