@@ -232,7 +232,7 @@ async def on_message(message):
             products = product_query['data']
             sorted_products = sorted(products, key=lambda item: item['items'][0]['price']['regular'])
             response = f"Prices for `{product}` at `{store_name}` near `{zipcode}`:\n"
-            for item in products:
+            for item in sorted_products:
                 product_name = item['description']
                 price = item['items'][0]['price']['regular']
                 response += f"- `${price}`: {product_name}: \n"
