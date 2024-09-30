@@ -68,6 +68,18 @@ def kroger_token():
     response.raise_for_status()
     return response.json()['access_token']
 
+def search_product(product, zipcode, access_token):
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    params = {
+        'filter.term': product,
+        'filter.locationId': zipcode,
+        'filter.limit': 10
+    }
+    response = requests.get('https://api.kroger.com/v1/products', headers=headers, params=params)
+    return response.json()
+
 
 # Meows Json Handling
 meows_file = "meow_counts.json"
