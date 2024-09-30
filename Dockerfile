@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY requirements.txt ./
 RUN apt update
-Run apt install nmap
+RUN apt install nmap
 RUN pip install --no-cache-dir -r requirements.txt -vvv
 
 CMD [ "python", "./garfbot.py" ]
