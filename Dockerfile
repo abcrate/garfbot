@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY ./requirements.txt .
 RUN apt update
 RUN apt install -y nmap
-RUN apt install -y rust
+RUN apt install -y rustc
 RUN apt install -y python3
 RUN apt install -y python3-pip
 # RUN pip3 install --no-cache-dir -r requirements.txt -vvv
