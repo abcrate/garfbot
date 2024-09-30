@@ -220,6 +220,7 @@ async def on_message(message):
         search_term = message.content[8:]
         await send_gif(message, search_term)
 
+    # Kroger Shopping
     if message.content.lower().startswith("garfshop "):
         try:
             kroken = kroger_token()
@@ -229,13 +230,13 @@ async def on_message(message):
             store_name = loc_data['data'][0]['name']
             product_query = search_product(product, loc_id, kroken)
             products = product_query['data']
-            kroger_items = f"Prices for `{product}` at `{store_name}`near `{zipcode}`:\n"
+            sorted_products = sorted(products, key=lambda item: item['items'][0]['price']['regular'])
+            response = f"Prices for `{product}` at `{store_name}` near `{zipcode}`:\n"
             for item in products:
                 product_name = item['description']
                 price = item['items'][0]['price']['regular']
-                kroger_items += f"{product_name}: ${price}\n"
-            await message.channel.send(kroger_items)
-
+                response += f"- `${price}`: {product_name}: \n"
+            await message.channel.send(response)
         except Exception as e:
             await message.channel.send(f"Error: {str(e)}")
 
