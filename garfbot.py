@@ -224,7 +224,9 @@ async def on_message(message):
     if message.content.lower().startswith("garfshop "):
         try:
             kroken = kroger_token()
-            _, product, zipcode = message.content.split()
+            kroger_query = message.content.split()
+            product = " ".join(kroger_query[1:-1])
+            zipcode = kroger_query[-1]
             loc_data = find_store(zipcode, kroken)
             loc_id = loc_data['data'][0]['locationId']
             store_name = loc_data['data'][0]['name']
