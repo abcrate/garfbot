@@ -238,6 +238,7 @@ async def on_message(message):
         try:
             query = message.content.split()
             target = query[-1]
+            print(f"Ping Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
                 rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -251,6 +252,7 @@ async def on_message(message):
         try:
             query = message.content.split()
             target = query[-1]
+            print(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
                 rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
