@@ -8,6 +8,7 @@ import discord
 import requests
 import logging
 import random
+from base64 import b64encode
 from openai import AsyncOpenAI
 from datetime import datetime
 from collections import defaultdict
