@@ -49,6 +49,18 @@ intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
 
+# Network Utils Setup
+def is_private(target):
+    try:
+        ip_obj = ipaddress.ip_address(target)
+        if ip_obj.is_private:
+            return True
+    except ValueError:
+        if "crate.lan" in target.lower():
+            return True
+    return False
+
+
 # Kroger Setup
 client_id = config.CLIENT_ID
 client_secret = config.CLIENT_SECRET
@@ -225,10 +237,31 @@ async def on_message(message):
         try:
             query = message.content.split()
             target = query[-1]
-            result = subprocess.run(['ping', '-c', '1', target], capture_output=True, text=True)
-            await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+            if is_private(target):
+                rejection = await generate_chat_response("Hey Garfield, I am hacking your computer network.")
+            else:
+                result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
+                await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
+
+    # if message.content.lower().startswith("garfdns "):
+    #     try:
+    #         query = message.content.split()
+    #         target = query[-1]
+    #         result = subprocess.run(['nslookup', target], capture_output=True, text=True)
+    #         await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+    #     except Exception as e:
+    #         await message.channel.send(f"`GarfBot Error: {str(e)}`")
+
+    # if message.content.lower().startswith("garfhack "):
+    #     try:
+    #         query = message.content.split()
+    #         target = query[-1]
+    #         result = subprocess.run(['ping', '-c', '1', target], capture_output=True, text=True)
+    #         await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+    #     except Exception as e:
+    #         await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Kroger Shopping
     if message.content.lower().startswith("garfshop "):
