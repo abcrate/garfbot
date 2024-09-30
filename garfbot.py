@@ -226,7 +226,7 @@ async def on_message(message):
             query = message.content.split()
             target = query[-1]
             result = subprocess.run(['ping', '-c', '1', target], capture_output=True, text=True)
-            await message.channel.send(f`"Ping result for {target}: {result.stdout}`")
+            await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
