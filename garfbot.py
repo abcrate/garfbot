@@ -174,7 +174,7 @@ async def generate_image(prompt):
         image_url = response.data[0].url
         return image_url
     except openai.BadRequestError as e:
-        return f"`GarfBot Error: ({e.status_code}) - Your request was rejected as a product_query of our safety system.`"
+        return f"`GarfBot Error: ({e.status_code}) - Your request was rejected as a result of our safety system.`"
     except openai.InternalServerError as e:
         logger.error(e)
         print(e, flush=True)
@@ -254,7 +254,7 @@ async def on_message(message):
                 await message.channel.send(rejection)
             else:
                 result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
-                await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+                await message.channel.send(f"`Ping result for {target}:`\n```\n{result.stdout}\n```")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
@@ -270,7 +270,7 @@ async def on_message(message):
                 await message.channel.send(rejection)
             else:
                 result = subprocess.run(['nslookup', target], capture_output=True, text=True)
-                await message.channel.send(f"`NSLookup result for {target}: {result.stdout}`")
+                await message.channel.send(f"`NSLookup result for {target}:`\n```\n{result.stdout}\n```")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
@@ -287,7 +287,7 @@ async def on_message(message):
             else:
                 await message.channel.send(f"`Scanning {target}...`")
                 result = subprocess.run(['nmap', '-Pn', '-O', '-v', target], capture_output=True, text=True)
-                await message.channel.send(f"`Ping result for {target}: {result.stdout}`")
+                await message.channel.send(f"`Ping result for {target}:`\n```\n{result.stdout}\n```")
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
@@ -397,7 +397,7 @@ async def send_gif(message, search_term):
     r = requests.get(f"https://tenor.googleapis.com/v2/search?q={search_term}&key={gapikey}&client_key={ckey}&limit={lmt}")
     if r.status_code == 200:
         top_50gifs = json.loads(r.content)
-        gif_url = random.choice(top_50gifs["product_querys"])["itemurl"]
+        gif_url = random.choice(top_50gifs["results"])["itemurl"]
         print(gif_url)
         try:
             await message.channel.send(gif_url)
