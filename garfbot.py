@@ -18,22 +18,25 @@ from operator import itemgetter
 from logging.handlers import TimedRotatingFileHandler
 
 
-# Log Setup
+# Log setup
 logger = logging.getLogger('garflog')
 logger.setLevel(logging.INFO)
-handler = TimedRotatingFileHandler(
+file_handler = TimedRotatingFileHandler(
     'garfbot.log',
     when='midnight',
     interval=1,
     backupCount=7,
-    delay=True # Flush output immediately
+    delay=True # Counterintuitively, will flush output immediately
     )
+console_handler = logging.StreamHandler()
 formatter=logging.Formatter(
     '%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
     )
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 
 # Bot Setup
@@ -415,9 +418,16 @@ async def on_error(event, *args, **kwargs):
 
 
 # Run GarfBot!
-try:
-    garfbot.run(garfkey)
-except Exception as e:
-        e = str(e)
-        logger.error(f"GarfBot Init Error: {e}")
-        print(f"GarfBot Init Error: {e}", flush=True)
+async def garfbot_connect()
+    while True:
+        try:
+            garfbot.start(garfkey)
+        except Exception as e:
+                e = str(e)
+                logger.error(f"Garfbot couldn't connect! {e}")
+                print(f"Garfbot couldn't connect! {e}", flush=True)
+                await asyncio.sleep(300)
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(garfbot_connect())
