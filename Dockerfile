@@ -13,4 +13,4 @@ RUN pip3 install openai
 RUN pip3 install aiohttp
 RUN pip3 install requests
 
-CMD [ "python", "./garfbot.py" ]
+CMD [ "python", "garfbot.py" ]
