@@ -421,7 +421,7 @@ async def on_error(event, *args, **kwargs):
 async def garfbot_connect():
     while True:
         try:
-            garfbot.start(garfkey)
+            await garfbot.start(garfkey)
         except Exception as e:
                 e = str(e)
                 logger.error(f"Garfbot couldn't connect! {e}")
