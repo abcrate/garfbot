@@ -418,7 +418,7 @@ async def on_error(event, *args, **kwargs):
 
 
 # Run GarfBot!
-async def garfbot_connect()
+async def garfbot_connect():
     while True:
         try:
             garfbot.start(garfkey)
