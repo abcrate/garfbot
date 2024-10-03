@@ -156,10 +156,10 @@ async def generate_chat_response(question):
     except openai.BadRequestError as e:
         return f"`GarfBot Error: {e}`"
     except openai.APIError as e:
-        print(e, flush=True)
+        logger.info(e, flush=True)
         return f"`GarfBot Error: Monday`"
     except Exception as e:
-        print(e, flush=True)
+        logger.info(e, flush=True)
         return f"`GarfBot Error: Lasagna`"
 
 
@@ -230,7 +230,7 @@ async def on_message(message):
         server = message.guild.name if message.guild else "Direct Message"
         prompt = message.content[8:]
         logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
-        print(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}", flush=True)
+        # print(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}", flush=True)
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await image_request_queue.put({'message': message, 'prompt': prompt})
 
@@ -250,7 +250,7 @@ async def on_message(message):
             user = message.author.name
             server = message.guild.name if message.guild else "Direct Message"
             target = query[-1]
-            print(f"Ping Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            logger.info(f"Ping Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
                 rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -266,7 +266,7 @@ async def on_message(message):
             user = message.author.name
             server = message.guild.name if message.guild else "Direct Message"
             target = query[-1]
-            print(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            logger.info(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
                 rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -282,7 +282,7 @@ async def on_message(message):
             user = message.author.name
             server = message.guild.name if message.guild else "Direct Message"
             target = query[-1]
-            print(f"Nmap Request - User: {user}, Server: {server}, Target: {target}", flush=True)
+            logger.info(f"Nmap Request - User: {user}, Server: {server}, Target: {target}", flush=True)
             if is_private(target):
                 rejection = await generate_chat_response("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -320,7 +320,7 @@ async def on_message(message):
 
         if "meow" in message.content.lower():
             logger.info(f"Meow detected! {message.author.name} said: {message.content}")
-            print(f"Meow detected! {message.author.name} said: {message.content}", flush=True)
+            # print(f"Meow detected! {message.author.name} said: {message.content}", flush=True)
 
             meow_counts[str(message.author.id)] += 1
 
@@ -401,7 +401,7 @@ async def send_gif(message, search_term):
         top_50gifs = json.loads(r.content)
         gif_url = random.choice(top_50gifs["results"])["itemurl"]
         logger.info(gif_url)
-        print(gif_url)
+        # print(gif_url)
         try:
             await message.channel.send(gif_url)
         except KeyError:
@@ -414,7 +414,7 @@ async def send_gif(message, search_term):
 @garfbot.event
 async def on_error(event, *args, **kwargs):
     logger.error(f'GarfBot Error: {event}')
-    print(f'GarfBot Error: {event}', flush=True)
+    # print(f'GarfBot Error: {event}', flush=True)
 
 
 # Run GarfBot!
@@ -425,7 +425,7 @@ async def garfbot_connect():
         except Exception as e:
                 e = str(e)
                 logger.error(f"Garfbot couldn't connect! {e}")
-                print(f"Garfbot couldn't connect! {e}", flush=True)
+                # print(f"Garfbot couldn't connect! {e}", flush=True)
                 await asyncio.sleep(60)
 
 if __name__ == "__main__":
