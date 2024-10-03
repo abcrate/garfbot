@@ -21,6 +21,10 @@ from logging.handlers import TimedRotatingFileHandler
 # Log setup
 logger = logging.getLogger('garflog')
 logger.setLevel(logging.INFO)
+formatter=logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+    )
 file_handler = TimedRotatingFileHandler(
     'garfbot.log',
     when='midnight',
@@ -28,12 +32,8 @@ file_handler = TimedRotatingFileHandler(
     backupCount=7,
     delay=True # Counter-intuitively, this will flush output immediately
     )
-console_handler = logging.StreamHandler()
-formatter=logging.Formatter(
-    '%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-    )
 file_handler.setFormatter(formatter)
+console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
@@ -179,11 +179,9 @@ async def generate_image(prompt):
         return f"`GarfBot Error: ({e.status_code}) - Your request was rejected as a result of our safety system.`"
     except openai.InternalServerError as e:
         logger.error(e)
-        print(e, flush=True)
         return f"`GarfBot Error: ({e.status_code}) - Monday`"
     except Exception as e:
         logger.error(e)
-        print(e, flush=True)
         return f"`GarfBot Error: Lasagna`"
 
 image_request_queue = asyncio.Queue()
@@ -230,7 +228,6 @@ async def on_message(message):
         server = message.guild.name if message.guild else "Direct Message"
         prompt = message.content[8:]
         logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
-        # print(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}", flush=True)
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await image_request_queue.put({'message': message, 'prompt': prompt})
 
@@ -414,7 +411,6 @@ async def send_gif(message, search_term):
 @garfbot.event
 async def on_error(event, *args, **kwargs):
     logger.error(f'GarfBot Error: {event}')
-    # print(f'GarfBot Error: {event}', flush=True)
 
 
 # Run GarfBot!
@@ -425,7 +421,6 @@ async def garfbot_connect():
         except Exception as e:
                 e = str(e)
                 logger.error(f"Garfbot couldn't connect! {e}")
-                # print(f"Garfbot couldn't connect! {e}", flush=True)
                 await asyncio.sleep(60)
 
 if __name__ == "__main__":
