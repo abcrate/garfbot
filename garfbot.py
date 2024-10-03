@@ -26,7 +26,7 @@ file_handler = TimedRotatingFileHandler(
     when='midnight',
     interval=1,
     backupCount=7,
-    delay=True # Counterintuitively, will flush output immediately
+    delay=True # Counter-intuitively, this will flush output immediately
     )
 console_handler = logging.StreamHandler()
 formatter=logging.Formatter(
@@ -137,7 +137,6 @@ user_stats = json_load(stats_file, {})
 async def on_ready():
     asyncio.create_task(process_image_requests()) # Important!
     logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
-    print(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.", flush=True)
 
 
 # GarfChats
@@ -201,13 +200,12 @@ async def process_image_requests():
                     if resp.status == 200:
                         image_data = await resp.read()
                         timestamp = message.created_at.strftime('%Y%m%d%H%M%S')
-                        save_filename = f"images/{timestamp}_generated_image.png"
-                        send_filename = f"{timestamp}_generated_image.png" # There is probably a better way to do this.
+                        save_filename = f"{timestamp}_generated_image.png"
                         with open(save_filename, "wb") as f:
                             f.write(image_data)
                         with open(save_filename, "rb") as f:
-                            await message.channel.send(file=discord.File(f, send_filename))
-                        os.remove(send_filename)
+                            await message.channel.send(file=discord.File(f, save_filename))
+                        os.remove(save_filename)
                     else:
                         await message.channel.send("`GarfBot Error: Odie`")
             else:
@@ -402,6 +400,7 @@ async def send_gif(message, search_term):
     if r.status_code == 200:
         top_50gifs = json.loads(r.content)
         gif_url = random.choice(top_50gifs["results"])["itemurl"]
+        logger.info(gif_url)
         print(gif_url)
         try:
             await message.channel.send(gif_url)
@@ -427,7 +426,7 @@ async def garfbot_connect():
                 e = str(e)
                 logger.error(f"Garfbot couldn't connect! {e}")
                 print(f"Garfbot couldn't connect! {e}", flush=True)
-                await asyncio.sleep(300)
+                await asyncio.sleep(60)
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
