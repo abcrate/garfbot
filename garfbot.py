@@ -207,6 +207,7 @@ async def process_image_requests():
                             f.write(image_data)
                         with open(save_filename, "rb") as f:
                             await message.channel.send(file=discord.File(f, send_filename))
+                        os.remove(send_filename)
                     else:
                         await message.channel.send("`GarfBot Error: Odie`")
             else:
