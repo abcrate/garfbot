@@ -3,10 +3,10 @@ GarfBot is a discord bot that uses openai generative pre-trained AI models to pr
 
 To interact: (not case-sensitive)
 
-`"hey garfield"`
+`"hey garfield {prompt}"`
     responds with text.
 
-`"garfpic"`
+`"garfpic {prompt}"`
     responds with image.
 
 
