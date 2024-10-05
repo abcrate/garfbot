@@ -1,6 +1,8 @@
 config.py
-/__pycache__/*
-/images/*
+__pycache__/
+garfpy/__pycache__/
+*.venv*
 *.json
 *.old
 *.log*
+meows.py
