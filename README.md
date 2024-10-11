@@ -10,12 +10,12 @@ To interact: (not case-sensitive)
     responds with image.
 
 
-To get started, clone this repo and create a `config.py` file in GarfBot's root directory. Open your favorite text editor or IDE and add your various API tokens as such:
+To get started, clone this repo and create a `config.py` file in GarfBot's root directory. Open your favorite text editor and add your tokens:
 
 ```python
 GARFBOT_TOKEN = "token"
 OPENAI_TOKEN = "token"
-GIF_TOKEN = "token"
+GIF_TOKEN = "token" #broken
 ```
 If you want to configure a more secure setup, go ahead.
 
@@ -23,13 +23,13 @@ Next, I recommend building a docker image for each bot using the included Docker
 
 A terraform file has been included to launch all three containers, or you can do it manually.
 
-Example:
+Example (garfbot.sh):
 ```console
-crate@raspberrypi:~/garfbot $ docker build -t garfbot .
-crate@raspberrypi:~/garfbot $ docker run -d --restart always -v $PWD:/usr/src/app --name garfbot garfbot
+user@host:~/garfbot $ docker build -t garfbot .
+user@host:~/garfbot $ docker run -d --restart always -v $PWD:/usr/src/app --name garfbot garfbot
 ```
 
-Or if you prefer to install dependencies (from requirements.txt) on you own host and run as a systemd service:
+If you prefer to install dependencies (from requirements.txt [deprecated]) on you own host and run as a systemd service:
 ```console
 [Unit]
 Description=garfbot
