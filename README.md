@@ -38,9 +38,9 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
-User=pi
-WorkingDirectory=/home/crate/garfbot
-ExecStart=/usr/bin/python ./garfbot.py
+User=$USER
+WorkingDirectory=/home/$USER/garfbot
+ExecStart=/usr/bin/python garfbot.py
 
 [Install]
 WantedBy=multi-user.target
