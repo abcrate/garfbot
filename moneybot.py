@@ -1,11 +1,12 @@
 import config
 import openai
 import discord
+import asyncio
 import os
 
 openai.api_key = config.OPENAI_TOKEN
 moneykey = config.MONEYBOT_TOKEN
-model = "gpt-4"
+model = config.TXT_MODEL
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -14,7 +15,7 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user.name} running gpt-4.", flush=True)
+    print(f"Logged in as {client.user.name} running {model}.", flush=True)
 
 @client.event
 async def on_message(message):
@@ -39,4 +40,14 @@ async def on_message(message):
             e = str(e)
             await message.channel.send(f"`MoneyBot Error: {e}`")
 
-client.run(moneykey)
+async def moneybot_connect():
+    while True:
+        try:
+            await client.start(moneykey)
+        except Exception as e:
+                e = str(e)
+                logger.error(f"Moneybot couldn't connect! {e}")
+                await asyncio.sleep(60)
+
+if __name__ == "__main__":
+    asyncio.run(moneybot_connect())
