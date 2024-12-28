@@ -16,7 +16,7 @@ Responds with iputils-ping result from target.
 `garfpic {target}`
 Responds with dns lookup result from target.
 
-`garfpic {target}`
+`garfhack {target}`
 Responds with nmap scan result from target.
 
 `garfshop {item} {zip}`
