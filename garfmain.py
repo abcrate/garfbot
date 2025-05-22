@@ -7,7 +7,7 @@ from garfpy import(
     logger, is_private,
     kroger_token, find_store, search_product,
     picture_time, process_image_requests, generate_chat,
-    aod_message)
+    aod_message, wiki)
 
 
 gapikey = config.GIF_TOKEN
@@ -39,6 +39,7 @@ async def on_message(message):
     if message.content.lower().startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
         question = message.content[12:] if message.content.lower().startswith("hey garfield") else message.content
         answer = await generate_chat(question)
+        logger.info(f"Chat Request - User: {user}, Server: {server}, Prompt: {question}")
         await message.channel.send(answer)
 
     if message.content.lower().startswith('garfpic '):
@@ -48,6 +49,11 @@ async def on_message(message):
         logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await picture_time(message, prompt)
+
+    if message.content.lower().startswith('wiki '):
+        search_term = message.content[5:]
+        summary = await wikisum(search_term)
+        await message.channel.send(summary)
 
     if message.content.lower().startswith("garfping "):
         try:

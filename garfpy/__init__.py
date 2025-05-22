@@ -10,3 +10,4 @@ from .garfai import(
 )
 from .iputils import is_private
 from .aod import aod_message
+from wiki import wikisum
