@@ -2,3 +2,4 @@ discord.py
 openai
 aiohttp
 requests
+wikipedia

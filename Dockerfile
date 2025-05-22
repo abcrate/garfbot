@@ -12,5 +12,6 @@ RUN pip3 install discord
 RUN pip3 install openai
 RUN pip3 install aiohttp
 RUN pip3 install requests
+RUN pip3 install wikipedia
 
 CMD [ "python", "garfmain.py" ]
