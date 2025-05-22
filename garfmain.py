@@ -7,7 +7,7 @@ from garfpy import(
     logger, is_private,
     kroger_token, find_store, search_product,
     picture_time, process_image_requests, generate_chat,
-    aod_message, wiki)
+    aod_message, wikisum)
 
 
 gapikey = config.GIF_TOKEN
