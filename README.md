@@ -36,7 +36,6 @@ Add your various API tokens:
 ```python
 GARFBOT_TOKEN = "Discord API token"
 OPENAI_TOKEN = "OpenAI API token"
-GIF_TOKEN = "tenor.com API token"
 ```
 
 I recommend building a docker image using the included DockerFile as a template. Run the container binding /usr/src/app to GarfBot's CWD:

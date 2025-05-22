@@ -1,5 +1,4 @@
 import config
-# import random
 import asyncio
 import discord
 import subprocess
@@ -49,16 +48,6 @@ async def on_message(message):
         logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await picture_time(message, prompt)
-
-    # if message.content.lower() == "lasagna":
-    #     await send_gif(message, "garfield lasagna")
-
-    # if message.content.lower() == "monday":
-    #     await send_gif(message, "garfield monday")
-
-    # if message.content.lower().startswith("garfgif "):
-    #     search_term = message.content[8:]
-    #     await send_gif(message, search_term)
 
     if message.content.lower().startswith("garfping "):
         try:
@@ -135,25 +124,6 @@ async def on_message(message):
     if message.guild and message.guild.id == 719605634772893757:
 
         await aod_message(garfbot, message)
-
-
-# # GarfGifs
-# @garfbot.event
-# async def send_gif(message, search_term):
-#     lmt = 50
-#     ckey = "garfbot"
-#     r = requests.get(f"https://tenor.googleapis.com/v2/search?q={search_term}&key={gapikey}&client_key={ckey}&limit={lmt}")
-#     if r.status_code == 200:
-#         top_50gifs = json.loads(r.content)
-#         gif_url = random.choice(top_50gifs["results"])["itemurl"]
-#         logger.info(gif_url)
-#         # logger.info(gif_url)
-#         try:
-#             await message.channel.send(gif_url)
-#         except KeyError:
-#             await message.channel.send("Oops, something went wrong.")
-#     else:
-#         await message.channel.send(f"`Oops, something went wrong. Error code: {r.status_code}`")
 
 
 async def garfbot_connect():
