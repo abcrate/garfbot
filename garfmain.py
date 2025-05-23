@@ -50,7 +50,7 @@ async def on_message(message):
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await picture_time(message, prompt)
 
-    if message.content.lower().startswith('wiki '):
+    if message.content.lower().startswith('garfwiki '):
         search_term = message.content[5:]
         summary = await wikisum(search_term)
         await message.channel.send(summary)
