@@ -37,6 +37,8 @@ async def on_message(message):
         return
 
     if message.content.lower().startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
+        user = message.author.name
+        server = message.guild.name if message.guild else "Direct Message"
         question = message.content[12:] if message.content.lower().startswith("hey garfield") else message.content
         answer = await generate_chat(question)
         logger.info(f"Chat Request - User: {user}, Server: {server}, Prompt: {question}")
