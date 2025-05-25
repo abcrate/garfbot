@@ -12,10 +12,9 @@ openaikey = config.OPENAI_TOKEN
 txtmodel = config.TXT_MODEL
 imgmodel = config.IMG_MODEL
 
-# GarfPics
 image_request_queue = asyncio.Queue()
 
-async def picture_time(message, prompt):
+async def garfpic(message, prompt):
     await image_request_queue.put({'message': message, 'prompt': prompt})
 
 async def generate_image(prompt):

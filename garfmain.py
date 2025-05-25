@@ -6,8 +6,8 @@ import subprocess
 from garfpy import(
     logger, is_private,
     kroger_token, find_store, search_product,
-    picture_time, process_image_requests, generate_chat,
-    aod_message, wikisum)
+    garfpic, process_image_requests, generate_chat,
+    aod_message, wikisum, generate_qr)
 
 
 gapikey = config.GIF_TOKEN
@@ -50,12 +50,23 @@ async def on_message(message):
         prompt = message.content[8:]
         logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
-        await picture_time(message, prompt)
+        await garfpic(message, prompt)
 
     if message.content.lower().startswith('garfwiki '):
         search_term = message.content[9:]
         summary = await wikisum(search_term)
         await message.channel.send(summary)
+
+    if message.content.lower().startswith('garfqr '):
+        text = message.content[7:]
+        if len(text) > 1000:
+            await mesage.channel.send("❌ Text too long! Maximum 1000 characters.")
+        else:
+            try:
+                qr_code = generate_qr(text)
+                await discord.File(fp=qr_code, filename="qrcode.png")
+            except Exception as e:
+                await message.channel.send(e)
 
     if message.content.lower().startswith("garfping "):
         try:
