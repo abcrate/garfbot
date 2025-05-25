@@ -64,8 +64,10 @@ async def on_message(message):
         else:
             try:
                 qr_code = await generate_qr(text)
-                await discord.File(fp=qr_code, filename="qrcode.png")
+                sendfile = discord.File(fp=qr_code, filename="qrcode.png")
+                await message.channel.send(file=sendfile)
             except Exception as e:
+                logger.error(e)
                 await message.channel.send(e)
 
     if message.content.lower().startswith("garfping "):
