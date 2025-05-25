@@ -3,3 +3,4 @@ openai
 aiohttp
 requests
 wikipedia
+qrcode
