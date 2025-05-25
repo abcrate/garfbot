@@ -63,7 +63,7 @@ async def on_message(message):
             await mesage.channel.send("❌ Text too long! Maximum 1000 characters.")
         else:
             try:
-                qr_code = generate_qr(text)
+                qr_code = await generate_qr(text)
                 await discord.File(fp=qr_code, filename="qrcode.png")
             except Exception as e:
                 await message.channel.send(e)
