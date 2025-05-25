@@ -3,4 +3,5 @@ openai
 aiohttp
 requests
 wikipedia
+pillow
 qrcode
