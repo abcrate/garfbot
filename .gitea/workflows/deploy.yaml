@@ -14,7 +14,8 @@ jobs:
     steps:
     - name: Pull Garfbot and restart container
       run: |
-        apk add --no-cache git
+        # apk add --no-cache git
+        ls -alh
         cd /workspace
         
         git pull origin main
