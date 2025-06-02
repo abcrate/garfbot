@@ -6,15 +6,13 @@ on:
 
 jobs:
   Deploy:
-    runs-on: ubuntu-latest
     container:
-      image: docker:latest
       volumes:
-        - /home/crate/garfbot:/workspace
+        - /home/crate/garfbot:/workspace/crate/garfbot/deploy
     steps:
     - name: Pull Garfbot and restart container
       run: |
-        cd ./garfbot
+        cd /workspace/crate/garfbot/deploy
 
         git pull origin main
         
