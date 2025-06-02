@@ -1,0 +1,32 @@
+name: Garfbot CI/CD Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:latest
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /home/crate/garfbot:/workspace
+    steps:
+    - name: Pull Garfbot and restart container
+      run: |
+        apk add --no-cache git
+        cd /workspace
+        
+        git pull origin main
+        
+        CHANGED=$(git diff --name-only HEAD~1 HEAD)
+        
+        if echo "$CHANGED" | grep -qE "(Dockerfile|requirements\.txt|docker-compose\.yml)"; then
+          docker stop garfbot
+          docker rm garfbot
+          docker build -t git.crate.zip/crate/garfbot:latest .
+          docker run -d --restart always -v $PWD:/usr/src/app --name garfbot git.crate.zip/crate/garfbot:latest
+        else
+          docker restart garfbot
+        fi
