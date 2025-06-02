@@ -15,9 +15,9 @@ jobs:
     - name: Pull Garfbot and restart container
       run: |
         ls -alh ..
-        cd /workspace/crate/garfbot
+        cd /garfbot
         ls -alh
-        
+
         git pull origin main
         
         CHANGED=$(git diff --name-only HEAD~1 HEAD)
