@@ -14,9 +14,7 @@ jobs:
     steps:
     - name: Pull Garfbot and restart container
       run: |
-        ls -alh ..
-        cd /garfbot
-        ls -alh
+        cd ./garfbot
 
         git pull origin main
         
