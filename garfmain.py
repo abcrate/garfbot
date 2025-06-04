@@ -23,7 +23,7 @@ intents.messages = True
 intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
-garf_respond = GarfbotRespond
+garf_respond = GarfbotRespond()
 
 @garfbot.event
 async def on_ready():
