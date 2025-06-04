@@ -6,3 +6,6 @@ garfpy/__pycache__/
 *.old
 *.log*
 meows.py
+meow_counts.json
+user_stats.json
+responses.json

@@ -1,3 +1,5 @@
+import os
+import json
 import config
 import asyncio
 import discord
@@ -7,7 +9,7 @@ from garfpy import(
     logger, is_private,
     kroger_token, find_store, search_product,
     garfpic, process_image_requests, generate_chat,
-    aod_message, wikisum, generate_qr)
+    aod_message, wikisum, generate_qr, GarfbotRespond)
 
 
 gapikey = config.GIF_TOKEN
@@ -21,15 +23,16 @@ intents.messages = True
 intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
+garf_respond = GarfbotRespond
 
 @garfbot.event
 async def on_ready():
     try:
         asyncio.create_task(process_image_requests())
+        garf_respond.load_responses()
         logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
     except Exception as e:
         logger.error(e)
-
 
 @garfbot.event
 async def on_message(message):
@@ -60,7 +63,7 @@ async def on_message(message):
     if message.content.lower().startswith('garfqr '):
         text = message.content[7:]
         if len(text) > 1000:
-            await mesage.channel.send("❌ Text too long! Maximum 1000 characters.")
+            await message.channel.send("❌ Text too long! Maximum 1000 characters.")
         else:
             try:
                 qr_code = await generate_qr(text)
@@ -143,8 +146,22 @@ async def on_message(message):
 
     # Army of Dawn Server only!!
     if message.guild and message.guild.id == 719605634772893757:
-
         await aod_message(garfbot, message)
+
+    # Auto-responses
+    guild_id = message.guild.id
+    content = message.content.strip()
+    content_lower = content.lower()
+    responses = garf_respond.get_responses(guild_id)
+    
+    if content.lower().startswith('garfbot response'):
+        await garf_respond.garfbot_response(message, content)
+        return
+        
+    for trigger, response in responses.items():
+        if trigger.lower() in content_lower:
+            await message.channel.send(response)
+            break
 
 
 async def garfbot_connect():
