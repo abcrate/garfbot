@@ -11,34 +11,33 @@ class GarfbotRespond:
         self.responses_file = 'responses.json'
 
     def load_responses(self):
-        global garfbot_guild_responses
         if os.path.exists(self.responses_file):
             try:
                 with open(self.responses_file, 'r', encoding='utf-8') as f:
-                    garfbot_guild_responses = json.load(f)
-                garfbot_guild_responses = {int(k): v for k, v in garfbot_guild_responses.items()}
-                total_responses = sum(len(responses) for responses in garfbot_guild_responses.values())
-                logger.info(f"Loaded responses for {len(garfbot_guild_responses)} server(s), ({total_responses} total responses)")
+                    self.garfbot_guild_responses = json.load(f)
+                self.garfbot_guild_responses = {int(k): v for k, v in self.garfbot_guild_responses.items()}
+                total_responses = sum(len(responses) for responses in self.garfbot_guild_responses.values())
+                logger.info(f"Loaded responses for {len(self.garfbot_guild_responses)} server(s), ({total_responses} total responses)")
             except Exception as e:
                 logger.info(f"Error loading responses: {e}")
-                garfbot_guild_responses = {}
+                self.garfbot_guild_responses = {}
         else:
-            garfbot_guild_responses = {}
+            self.garfbot_guild_responses = {}
 
     def save_responses(self):
         try:
-            save_data = {str(k): v for k, v in garfbot_guild_responses.items()}
+            save_data = {str(k): v for k, v in self.garfbot_guild_responses.items()}
             with open(self.responses_file, 'w', encoding='utf-8') as f:
                 json.dump(save_data, f, indent=2, ensure_ascii=False)
-            total_responses = sum(len(responses) for responses in garfbot_guild_responses.values())
-            logger.info(f"Saved responses for {len(garfbot_guild_responses)} servers ({total_responses} total responses)")
+            total_responses = sum(len(responses) for responses in self.garfbot_guild_responses.values())
+            logger.info(f"Saved responses for {len(self.garfbot_guild_responses)} servers ({total_responses} total responses)")
         except Exception as e:
             logger.info(f"Error saving responses: {e}")
 
-    def get_responses(guild_id):
-        if guild_id not in garfbot_guild_responses:
-            garfbot_guild_responses[guild_id] = {}
-        return garfbot_guild_responses[guild_id]
+    def get_responses(self, guild_id):
+        if guild_id not in self.garfbot_guild_responses:
+            self.garfbot_guild_responses[guild_id] = {}
+        return self.garfbot_guild_responses[guild_id]
 
     async def garfbot_response(self, message, content):
         guild_id = message.guild.id
@@ -93,7 +92,7 @@ class GarfbotRespond:
         
         responses = self.get_responses(guild_id)
         responses[trigger] = response_text
-        garfbot_guild_responses[guild_id] = responses
+        self.garfbot_guild_responses[guild_id] = responses
         self.save_responses()
         
         embed = discord.Embed(
@@ -112,7 +111,7 @@ class GarfbotRespond:
         if trigger in responses:
             removed_response = responses[trigger]
             del responses[trigger]
-            garfbot_guild_responses[guild_id] = responses
+            self.garfbot_guild_responses[guild_id] = responses
             self.save_responses()
             
             embed = discord.Embed(
@@ -130,7 +129,7 @@ class GarfbotRespond:
             if key.lower() == trigger.lower():
                 removed_response = responses[key]
                 del responses[key]
-                garfbot_guild_responses[guild_id] = responses
+                self.garfbot_guild_responses[guild_id] = responses
                 self.save_responses()
                 
                 embed = discord.Embed(

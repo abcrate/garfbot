@@ -149,19 +149,20 @@ async def on_message(message):
         await aod_message(garfbot, message)
 
     # Auto-responses
-    guild_id = message.guild.id
-    content = message.content.strip()
-    content_lower = content.lower()
-    responses = garf_respond.get_responses(guild_id)
-    
-    if content_lower.startswith('garfbot response'):
-        await garf_respond.garfbot_response(message, content)
-        return
+    if message.guild:
+        guild_id = message.guild.id
+        content = message.content
+        content_lower = content.lower()
+        responses = garf_respond.get_responses(guild_id)
         
-    for trigger, response in responses.items():
-        if trigger.lower() in content_lower:
-            await message.channel.send(response)
-            break
+        if message.content.lower().startswith('garfbot response '):
+            await garf_respond.garfbot_response(message, content)
+            return
+            
+        for trigger, response in responses.items():
+            if trigger.lower() in content_lower:
+                await message.channel.send(response)
+                break
 
 
 async def garfbot_connect():
