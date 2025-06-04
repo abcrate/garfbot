@@ -44,33 +44,27 @@ class GarfbotRespond:
 
         logger.info(message.content)
         
-        add_pattern = r'garfbot\s+response\s+add\s+["\']([^"\']+)["\']\s+["\']([^"\']+)["\']'
-        add_match = re.search(add_pattern, content, re.IGNORECASE)
-        
-        if add_match:
-            trigger = add_match.group(1)
-            response_text = add_match.group(2)
+        match = re.search(r'garfbot response add "(.+?)" "(.+?)"', content, re.IGNORECASE)
+        if match:
+            trigger = match.group(1)
+            response_text = match.group(2)
             await self.add_response(message, guild_id, trigger, response_text)
             return
         
-        add_simple_pattern = r'garfbot\s+response\s+add\s+(\S+)\s+(\S+)'
-        add_simple_match = re.search(add_simple_pattern, content, re.IGNORECASE)
-        
-        if add_simple_match:
-            trigger = add_simple_match.group(1)
-            response_text = add_simple_match.group(2)
+        match = re.search(r'garfbot response add (\S+) (.+)', content, re.IGNORECASE)
+        if match:
+            trigger = match.group(1) 
+            response_text = match.group(2)
             await self.add_response(message, guild_id, trigger, response_text)
             return
         
-        remove_pattern = r'garfbot\s+response\s+remove\s+(\S+)'
-        remove_match = re.search(remove_pattern, content, re.IGNORECASE)
-        
-        if remove_match:
-            trigger = remove_match.group(1).strip()
+        match = re.search(r'garfbot\s+response\s+remove\s+(\S+)', content, re.IGNORECASE)
+        if match:
+            trigger = match.group(1).strip()
             await self.remove_response(message, guild_id, trigger)
             return
         
-        if re.search(r'garfbot\s+response\s+list', content, re.IGNORECASE):
+        if content.lower() == "garfbot response list":
             await self.list_responses(message, guild_id)
             return
         

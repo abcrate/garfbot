@@ -1,5 +1,3 @@
-import os
-import json
 import config
 import asyncio
 import discord
@@ -39,8 +37,8 @@ async def on_ready():
 @garfbot.event
 async def on_message(message):
 
-    content = message.content
-    content_lower = content.lower()
+    content = message.content.strip()
+    lower = content.lower()
     user = message.author.name
     guild = message.guild.name if message.guild else "Direct Message"
     guild_id = message.guild.id
@@ -49,26 +47,26 @@ async def on_message(message):
     if message.author == garfbot.user:
         return
 
-    if content_lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
-        question = content[12:] if content_lower.startswith("hey garfield") else message.content
+    if lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
+        question = content[12:] if lower.startswith("hey garfield") else message.content
         answer = await generate_chat(question)
         logger.info(f"Chat Request - User: {user}, Server: {guild}, Prompt: {question}")
         await message.channel.send(answer)
 
-    if content_lower.startswith('garfpic '):
+    if lower.startswith('garfpic '):
         prompt = content[8:]
         logger.info(f"Image Request - User: {user}, Server: {guild}, Prompt: {prompt}")
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await garfpic(message, prompt)
 
     # Wikipedia
-    if content_lower.startswith('garfwiki '):
+    if lower.startswith('garfwiki '):
         search_term = message.content[9:]
         summary = await wikisum(search_term)
         await message.channel.send(summary)
 
     # QR codes
-    if content_lower.startswith('garfqr '):
+    if lower.startswith('garfqr '):
         text = message.content[7:]
         if len(text) > 1000:
             await message.channel.send("❌ Text too long! Maximum 1000 characters.")
@@ -85,7 +83,7 @@ async def on_message(message):
     query = message.content.split()
     target = query[-1]
 
-    if content_lower.startswith("garfping "):
+    if lower.startswith("garfping "):
         try:
             logger.info(f"Ping Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
@@ -97,7 +95,7 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
-    if content_lower.startswith("garfdns "):
+    if lower.startswith("garfdns "):
         try:
             logger.info(f"NSLookup Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
@@ -109,7 +107,7 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
-    if content_lower.startswith("garfhack "):
+    if lower.startswith("garfhack "):
         try:
             logger.info(f"Nmap Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
@@ -123,7 +121,7 @@ async def on_message(message):
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Kroger Shopping
-    if content_lower.startswith("garfshop "):
+    if lower.startswith("garfshop "):
         try:
             kroken = kroger_token()
             kroger_query = message.content.split()
@@ -152,12 +150,12 @@ async def on_message(message):
     if message.guild:
         responses = garf_respond.get_responses(guild_id)
         
-        if content_lower.startswith('garfbot response '):
+        if lower.startswith('garfbot response '):
             await garf_respond.garfbot_response(message, content)
             return
             
         for trigger, response in responses.items():
-            if trigger.lower() in content_lower:
+            if trigger.lower() in lower:
                 await message.channel.send(response)
                 break
 
