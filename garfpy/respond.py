@@ -44,7 +44,7 @@ class GarfbotRespond:
 
         logger.info(message.content)
         
-        match = re.search(r'garfbot response add "(.+?)" "(.+?)"', content, re.IGNORECASE)
+        match = re.search(r'garfbot response add "(.+)" "(.+)"', content, re.IGNORECASE)
         if match:
             trigger = match.group(1)
             response_text = match.group(2)
@@ -58,7 +58,7 @@ class GarfbotRespond:
             await self.add_response(message, guild_id, trigger, response_text)
             return
         
-        match = re.search(r'garfbot\s+response\s+remove\s+(\S+)', content, re.IGNORECASE)
+        match = re.search(r'garfbot\s+response\s+remove\s+(.+)', content, re.IGNORECASE)
         if match:
             trigger = match.group(1).strip()
             await self.remove_response(message, guild_id, trigger)
