@@ -25,6 +25,7 @@ garfbot = discord.Client(intents=intents)
 
 garf_respond = GarfbotRespond()
 
+
 @garfbot.event
 async def on_ready():
     try:
@@ -34,33 +35,40 @@ async def on_ready():
     except Exception as e:
         logger.error(e)
 
+
 @garfbot.event
 async def on_message(message):
+
+    content = message.content
+    content_lower = content.lower()
+    user = message.author.name
+    guild = message.guild.name if message.guild else "Direct Message"
+    guild_id = message.guild.id
+
+    # Chats & pics
     if message.author == garfbot.user:
         return
 
-    if message.content.lower().startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
-        user = message.author.name
-        server = message.guild.name if message.guild else "Direct Message"
-        question = message.content[12:] if message.content.lower().startswith("hey garfield") else message.content
+    if content_lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
+        question = content[12:] if content_lower.startswith("hey garfield") else message.content
         answer = await generate_chat(question)
-        logger.info(f"Chat Request - User: {user}, Server: {server}, Prompt: {question}")
+        logger.info(f"Chat Request - User: {user}, Server: {guild}, Prompt: {question}")
         await message.channel.send(answer)
 
-    if message.content.lower().startswith('garfpic '):
-        user = message.author.name
-        server = message.guild.name if message.guild else "Direct Message"
-        prompt = message.content[8:]
-        logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
+    if content_lower.startswith('garfpic '):
+        prompt = content[8:]
+        logger.info(f"Image Request - User: {user}, Server: {guild}, Prompt: {prompt}")
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
         await garfpic(message, prompt)
 
-    if message.content.lower().startswith('garfwiki '):
+    # Wikipedia
+    if content_lower.startswith('garfwiki '):
         search_term = message.content[9:]
         summary = await wikisum(search_term)
         await message.channel.send(summary)
 
-    if message.content.lower().startswith('garfqr '):
+    # QR codes
+    if content_lower.startswith('garfqr '):
         text = message.content[7:]
         if len(text) > 1000:
             await message.channel.send("❌ Text too long! Maximum 1000 characters.")
@@ -73,13 +81,13 @@ async def on_message(message):
                 logger.error(e)
                 await message.channel.send(e)
 
-    if message.content.lower().startswith("garfping "):
+    # IP utils
+    query = message.content.split()
+    target = query[-1]
+
+    if content_lower.startswith("garfping "):
         try:
-            query = message.content.split()
-            user = message.author.name
-            server = message.guild.name if message.guild else "Direct Message"
-            target = query[-1]
-            logger.info(f"Ping Request - User: {user}, Server: {server}, Target: {target}")
+            logger.info(f"Ping Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
                 rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -89,13 +97,9 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
-    if message.content.lower().startswith("garfdns "):
+    if content_lower.startswith("garfdns "):
         try:
-            query = message.content.split()
-            user = message.author.name
-            server = message.guild.name if message.guild else "Direct Message"
-            target = query[-1]
-            logger.info(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}")
+            logger.info(f"NSLookup Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
                 rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -105,13 +109,9 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
-    if message.content.lower().startswith("garfhack "):
+    if content_lower.startswith("garfhack "):
         try:
-            query = message.content.split()
-            user = message.author.name
-            server = message.guild.name if message.guild else "Direct Message"
-            target = query[-1]
-            logger.info(f"Nmap Request - User: {user}, Server: {server}, Target: {target}")
+            logger.info(f"Nmap Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
                 rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
@@ -123,7 +123,7 @@ async def on_message(message):
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Kroger Shopping
-    if message.content.lower().startswith("garfshop "):
+    if content_lower.startswith("garfshop "):
         try:
             kroken = kroger_token()
             kroger_query = message.content.split()
@@ -150,12 +150,9 @@ async def on_message(message):
 
     # Auto-responses
     if message.guild:
-        guild_id = message.guild.id
-        content = message.content
-        content_lower = content.lower()
         responses = garf_respond.get_responses(guild_id)
         
-        if message.content.lower().startswith('garfbot response '):
+        if content_lower.startswith('garfbot response '):
             await garf_respond.garfbot_response(message, content)
             return
             
@@ -164,7 +161,7 @@ async def on_message(message):
                 await message.channel.send(response)
                 break
 
-
+# Run Garfbot
 async def garfbot_connect():
     while True:
         try:
