@@ -42,6 +42,8 @@ class GarfbotRespond:
 
     async def garfbot_response(self, message, content):
         guild_id = message.guild.id
+
+        logger.info(content)
         
         add_pattern = r'garfbot\s+response\s+add\s+["\']([^"\']+)["\']\s+["\']([^"\']+)["\']'
         add_match = re.search(add_pattern, content, re.IGNORECASE)

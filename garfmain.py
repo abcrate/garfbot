@@ -154,7 +154,7 @@ async def on_message(message):
     content_lower = content.lower()
     responses = garf_respond.get_responses(guild_id)
     
-    if content.lower().startswith('garfbot response'):
+    if content_lower.startswith('garfbot response'):
         await garf_respond.garfbot_response(message, content)
         return
         
