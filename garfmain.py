@@ -1,10 +1,9 @@
 import config
 import asyncio
 import discord
-import subprocess
 
 from garfpy import(
-    logger, is_private,
+    logger, IPUtils,
     aod_message, generate_qr,
     Kroger, GarfAI, GarfbotRespond)
 
@@ -22,7 +21,9 @@ garfbot = discord.Client(intents=intents)
 
 garf_respond = GarfbotRespond()
 garfield = GarfAI()
+iputils = IPUtils()
 kroger = Kroger()
+
 
 
 @garfbot.event
@@ -37,28 +38,18 @@ async def on_ready():
 
 @garfbot.event
 async def on_message(message):
-
-    content = message.content.strip()
-    lower = content.lower()
-    user = message.author.name
-    guild = message.guild.name if message.guild else "Direct Message"
-    guild_id = message.guild.id
-
-    # Chats & pics
     if message.author == garfbot.user:
         return
+    
+    content = message.content.strip()
+    lower = content.lower()
+    user_name = message.author.name
+    guild_id = message.guild.id
+    guild_name = message.guild.name if message.guild else "Direct Message"
 
-    if lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
-        prompt = content[12:] if lower.startswith("hey garfield") else message.content
-        answer = await garfield.generate_chat(prompt)
-        logger.info(f"Chat Request - User: {user}, Server: {guild}, Prompt: {prompt}")
-        await message.channel.send(answer)
-
-    if lower.startswith('garfpic '):
-        prompt = content[8:]
-        logger.info(f"Image Request - User: {user}, Server: {guild}, Prompt: {prompt}")
-        await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
-        await garfield.garfpic(message, prompt)
+    # IP utils
+    if message.guild and lower.startswith(("garfping ", "garfdns ", "garfhack ")):
+        await iputils.scan(message, user_name, guild_name, lower)
 
     # Wikipedia
     if lower.startswith('garfwiki '):
@@ -79,47 +70,6 @@ async def on_message(message):
             except Exception as e:
                 logger.error(e)
                 await message.channel.send(e)
-
-    # IP utils
-    query = message.content.split()
-    target = query[-1]
-
-    if lower.startswith("garfping "):
-        try:
-            logger.info(f"Ping Request - User: {user}, Server: {guild}, Target: {target}")
-            if is_private(target):
-                rejection = await garfield.generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
-                await message.channel.send(rejection)
-            else:
-                result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
-                await message.channel.send(f"`Ping result for {target}:`\n```\n{result.stdout}\n```")
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
-
-    if lower.startswith("garfdns "):
-        try:
-            logger.info(f"NSLookup Request - User: {user}, Server: {guild}, Target: {target}")
-            if is_private(target):
-                rejection = await garfield.generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
-                await message.channel.send(rejection)
-            else:
-                result = subprocess.run(['nslookup', target], capture_output=True, text=True)
-                await message.channel.send(f"`NSLookup result for {target}:`\n```\n{result.stdout}\n```")
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
-
-    if lower.startswith("garfhack "):
-        try:
-            logger.info(f"Nmap Request - User: {user}, Server: {guild}, Target: {target}")
-            if is_private(target):
-                rejection = await garfield.generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
-                await message.channel.send(rejection)
-            else:
-                await message.channel.send(f"`Scanning {target}...`")
-                result = subprocess.run(['nmap', '-Pn', '-O', '-v', target], capture_output=True, text=True)
-                await message.channel.send(f"`Ping result for {target}:`\n```\n{result.stdout}\n```")
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
     # Kroger Shopping
     if lower.startswith("garfshop "):
@@ -146,6 +96,20 @@ async def on_message(message):
             if trigger.lower() in lower:
                 await message.channel.send(response)
                 break
+
+    # Chats & pics
+    elif lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
+        prompt = content[12:] if lower.startswith("hey garfield") else message.content
+        answer = await garfield.generate_chat(prompt)
+        logger.info(f"Chat Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}")
+        await message.channel.send(answer)
+
+    elif lower.startswith('garfpic '):
+        prompt = content[8:]
+        logger.info(f"Image Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}")
+        await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
+        await garfield.garfpic(message, prompt)
+
 
 # Run Garfbot
 async def garfbot_connect():
