@@ -2,10 +2,15 @@ import config
 import asyncio
 import discord
 
-from garfpy import(
-    logger, IPUtils,
-    aod_message, generate_qr,
-    Kroger, GarfAI, GarfbotRespond)
+from garfpy import (
+    logger,
+    IPUtils,
+    aod_message,
+    generate_qr,
+    Kroger,
+    GarfAI,
+    GarfbotRespond,
+)
 
 
 gapikey = config.GIF_TOKEN
@@ -25,13 +30,14 @@ iputils = IPUtils()
 kroger = Kroger()
 
 
-
 @garfbot.event
 async def on_ready():
     try:
         garf_respond.load_responses()
         asyncio.create_task(garfield.process_image_requests())
-        logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
+        logger.info(
+            f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}."
+        )
     except Exception as e:
         logger.error(e)
 
@@ -40,7 +46,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == garfbot.user:
         return
-    
+
     content = message.content.strip()
     lower = content.lower()
     user_name = message.author.name
@@ -52,13 +58,13 @@ async def on_message(message):
         await iputils.scan(message, user_name, guild_name, lower)
 
     # Wikipedia
-    if lower.startswith('garfwiki '):
+    if lower.startswith("garfwiki "):
         query = message.content[9:]
         summary = await garfield.wikisum(query)
         await message.channel.send(summary)
 
     # QR codes
-    if lower.startswith('garfqr '):
+    if lower.startswith("garfqr "):
         text = message.content[7:]
         if len(text) > 1000:
             await message.channel.send("❌ Text too long! Maximum 1000 characters.")
@@ -80,35 +86,43 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
+    # Chats & pics
+    elif lower.startswith("hey garfield") or isinstance(
+        message.channel, discord.DMChannel
+    ):
+        prompt = content[12:] if lower.startswith("hey garfield") else message.content
+        answer = await garfield.generate_chat(prompt)
+        logger.info(
+            f"Chat Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
+        )
+        await message.channel.send(answer)
+
+    elif lower.startswith("garfpic "):
+        prompt = content[8:]
+        logger.info(
+            f"Image Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
+        )
+        await message.channel.send(
+            f"`Please wait... image generation queued: {prompt}`"
+        )
+        await garfield.garfpic(message, prompt)
+
     # Army of Dawn Server only!!
-    if message.guild and message.guild.id == 719605634772893757:
+    elif message.guild and message.guild.id == 719605634772893757:
         await aod_message(garfbot, message)
 
     # Auto-responses
-    if message.guild:
+    elif message.guild:
         responses = garf_respond.get_responses(guild_id)
-        
-        if lower.startswith('garfbot response '):
+
+        if lower.startswith("garfbot response "):
             await garf_respond.garfbot_response(message, content)
             return
-            
+
         for trigger, response in responses.items():
             if trigger.lower() in lower:
                 await message.channel.send(response)
                 break
-
-    # Chats & pics
-    elif lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
-        prompt = content[12:] if lower.startswith("hey garfield") else message.content
-        answer = await garfield.generate_chat(prompt)
-        logger.info(f"Chat Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}")
-        await message.channel.send(answer)
-
-    elif lower.startswith('garfpic '):
-        prompt = content[8:]
-        logger.info(f"Image Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}")
-        await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
-        await garfield.garfpic(message, prompt)
 
 
 # Run Garfbot
@@ -117,9 +131,10 @@ async def garfbot_connect():
         try:
             await garfbot.start(garfkey)
         except Exception as e:
-                e = str(e)
-                logger.error(f"Garfbot couldn't connect! {e}")
-                await asyncio.sleep(60)
+            e = str(e)
+            logger.error(f"Garfbot couldn't connect! {e}")
+            await asyncio.sleep(60)
+
 
 if __name__ == "__main__":
     asyncio.run(garfbot_connect())

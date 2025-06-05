@@ -4,7 +4,7 @@ import subprocess
 from garfpy import logger
 
 
-class IPUtils:    
+class IPUtils:
     def is_private(self, target):
         try:
             ip_obj = ipaddress.ip_address(target)
@@ -31,10 +31,14 @@ class IPUtils:
 
         if query.startswith("garfping "):
             try:
-                logger.info(f"Ping Request - User: {user}, Server: {guild}, Target: {target}")
+                logger.info(
+                    f"Ping Request - User: {user}, Server: {guild}, Target: {target}"
+                )
                 await message.channel.send(f"`Pinging {target}...`")
-                result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
-                embed = discord.Embed(title=f"Ping result:", color=0x4d4d4d)
+                result = subprocess.run(
+                    ["ping", "-c", "4", target], capture_output=True, text=True
+                )
+                embed = discord.Embed(title=f"Ping result:", color=0x4D4D4D)
                 embed.add_field(name=target, value=f"```{result.stdout}```")
                 await message.channel.send(embed=embed)
             except Exception as e:
@@ -42,10 +46,14 @@ class IPUtils:
 
         if query.startswith("garfdns "):
             try:
-                logger.info(f"NSLookup Request - User: {user}, Server: {guild}, Target: {target}")
+                logger.info(
+                    f"NSLookup Request - User: {user}, Server: {guild}, Target: {target}"
+                )
                 await message.channel.send(f"`Requesting {target}...`")
-                result = subprocess.run(['nslookup', target], capture_output=True, text=True)
-                embed = discord.Embed(title=f"NSLookup result:", color=0x4d4d4d)
+                result = subprocess.run(
+                    ["nslookup", target], capture_output=True, text=True
+                )
+                embed = discord.Embed(title=f"NSLookup result:", color=0x4D4D4D)
                 embed.add_field(name=target, value=f"```{result.stdout}```")
                 await message.channel.send(embed=embed)
             except Exception as e:
@@ -53,10 +61,14 @@ class IPUtils:
 
         if query.startswith("garfhack "):
             try:
-                logger.info(f"Nmap Request - User: {user}, Server: {guild}, Target: {target}")
-                await message.channel.send(f"`Scanning {target}...`")         
-                result = subprocess.run(['nmap', '-Pn', '-O', '-v', target], capture_output=True, text=True)
-                embed = discord.Embed(title=f"Nmap scan result:", color=0x4d4d4d)
+                logger.info(
+                    f"Nmap Request - User: {user}, Server: {guild}, Target: {target}"
+                )
+                await message.channel.send(f"`Scanning {target}...`")
+                result = subprocess.run(
+                    ["nmap", "-Pn", "-O", "-v", target], capture_output=True, text=True
+                )
+                embed = discord.Embed(title=f"Nmap scan result:", color=0x4D4D4D)
                 embed.add_field(name=target, value=f"```{result.stdout}```")
                 embed.set_footer(text="https://nmap.org/")
                 await message.channel.send(embed=embed)
