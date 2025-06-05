@@ -5,8 +5,8 @@ import subprocess
 
 from garfpy import(
     logger, is_private,
-    kroger_token, find_store, search_product,
-    aod_message, wikisum, generate_qr, GarfAI, GarfbotRespond)
+    aod_message, generate_qr,
+    Kroger, GarfAI, GarfbotRespond)
 
 
 gapikey = config.GIF_TOKEN
@@ -20,9 +20,9 @@ intents.messages = True
 intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
-
 garf_respond = GarfbotRespond()
 garfield = GarfAI()
+kroger = Kroger()
 
 
 @garfbot.event
@@ -49,9 +49,9 @@ async def on_message(message):
         return
 
     if lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
-        question = content[12:] if lower.startswith("hey garfield") else message.content
-        answer = await garfield.generate_chat(question)
-        logger.info(f"Chat Request - User: {user}, Server: {guild}, Prompt: {question}")
+        prompt = content[12:] if lower.startswith("hey garfield") else message.content
+        answer = await garfield.generate_chat(prompt)
+        logger.info(f"Chat Request - User: {user}, Server: {guild}, Prompt: {prompt}")
         await message.channel.send(answer)
 
     if lower.startswith('garfpic '):
@@ -62,8 +62,8 @@ async def on_message(message):
 
     # Wikipedia
     if lower.startswith('garfwiki '):
-        search_term = message.content[9:]
-        summary = await wikisum(search_term)
+        query = message.content[9:]
+        summary = await garfield.wikisum(query)
         await message.channel.send(summary)
 
     # QR codes
@@ -124,21 +124,8 @@ async def on_message(message):
     # Kroger Shopping
     if lower.startswith("garfshop "):
         try:
-            kroken = kroger_token()
-            kroger_query = message.content.split()
-            product = " ".join(kroger_query[1:-1])
-            zipcode = kroger_query[-1]
-            loc_data = find_store(zipcode, kroken)
-            loc_id = loc_data['data'][0]['locationId']
-            store_name = loc_data['data'][0]['name']
-            product_query = search_product(product, loc_id, kroken)
-            products = product_query['data']
-            sorted_products = sorted(products, key=lambda item: item['items'][0]['price']['regular'])
-            response = f"Prices for `{product}` at `{store_name}` near `{zipcode}`:\n"
-            for item in sorted_products:
-                product_name = item['description']
-                price = item['items'][0]['price']['regular']
-                response += f"- `${price}`: {product_name} \n"
+            query = message.content[9:]
+            response = kroger.garfshop(query)
             await message.channel.send(response)
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")

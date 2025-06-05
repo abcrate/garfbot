@@ -4,6 +4,7 @@ import config
 import aiohttp
 import asyncio
 import discord
+import wikipedia
 from openai import AsyncOpenAI
 from garfpy import logger
 
@@ -66,8 +67,6 @@ class GarfAI:
                 self.image_request_queue.task_done()
                 await asyncio.sleep(2)
 
-    # GarfChats
-    @staticmethod
     async def generate_chat(self, question):
         try:
             client = AsyncOpenAI(api_key = self.openaikey)
@@ -89,3 +88,11 @@ class GarfAI:
         except Exception as e:
             logger.info(e, flush=True)
             return f"`GarfBot Error: Lasagna`"
+
+    async def wikisum(self, query):
+        try:
+            summary = wikipedia.summary(query)
+            garfsum = await self.generate_chat(f"Please summarize in your own words: {summary}")
+            return garfsum
+        except Exception as e:
+            return e
