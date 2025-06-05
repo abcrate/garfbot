@@ -13,4 +13,5 @@ from .iputils import is_private
 from .aod import aod_message
 from .wiki import wikisum
 from .qr import generate_qr
+from .garfai import GarfAI
 from .respond import GarfbotRespond

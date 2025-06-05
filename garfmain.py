@@ -6,8 +6,7 @@ import subprocess
 from garfpy import(
     logger, is_private,
     kroger_token, find_store, search_product,
-    garfpic, process_image_requests, generate_chat,
-    aod_message, wikisum, generate_qr, GarfbotRespond)
+    aod_message, wikisum, generate_qr, GarfAI, GarfbotRespond)
 
 
 gapikey = config.GIF_TOKEN
@@ -21,14 +20,16 @@ intents.messages = True
 intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
+
 garf_respond = GarfbotRespond()
+garfield = GarfAI()
 
 
 @garfbot.event
 async def on_ready():
     try:
-        asyncio.create_task(process_image_requests())
         garf_respond.load_responses()
+        asyncio.create_task(garfield.process_image_requests())
         logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
     except Exception as e:
         logger.error(e)
@@ -49,7 +50,7 @@ async def on_message(message):
 
     if lower.startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
         question = content[12:] if lower.startswith("hey garfield") else message.content
-        answer = await generate_chat(question)
+        answer = await garfield.generate_chat(question)
         logger.info(f"Chat Request - User: {user}, Server: {guild}, Prompt: {question}")
         await message.channel.send(answer)
 
@@ -57,7 +58,7 @@ async def on_message(message):
         prompt = content[8:]
         logger.info(f"Image Request - User: {user}, Server: {guild}, Prompt: {prompt}")
         await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
-        await garfpic(message, prompt)
+        await garfield.garfpic(message, prompt)
 
     # Wikipedia
     if lower.startswith('garfwiki '):
@@ -87,7 +88,7 @@ async def on_message(message):
         try:
             logger.info(f"Ping Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
-                rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                rejection = await garfield.generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
             else:
                 result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
@@ -99,7 +100,7 @@ async def on_message(message):
         try:
             logger.info(f"NSLookup Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
-                rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                rejection = await garfield.generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
             else:
                 result = subprocess.run(['nslookup', target], capture_output=True, text=True)
@@ -111,7 +112,7 @@ async def on_message(message):
         try:
             logger.info(f"Nmap Request - User: {user}, Server: {guild}, Target: {target}")
             if is_private(target):
-                rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
+                rejection = await garfield.generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
                 await message.channel.send(rejection)
             else:
                 await message.channel.send(f"`Scanning {target}...`")
