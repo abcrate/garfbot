@@ -122,7 +122,7 @@ async def on_message(message):
             inline=True,
         )
         embed.add_field(
-            name="garfpic `target`",
+            name="garfdns `target`",
             value="*Responds with dns lookup result from target.*",
             inline=True,
         )

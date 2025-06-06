@@ -14,7 +14,7 @@ GarfBot is a discord bot that uses OpenAI's generative pre-trained models to pro
 `garfping {target}`
 <br>Responds with iputils-ping result from target.
 
-`garfpic {target}`
+`garfdns {target}`
 <br>Responds with dns lookup result from target.
 
 `garfhack {target}`
