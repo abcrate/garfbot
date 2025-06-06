@@ -2,25 +2,44 @@ Who is GarfBot?
 ======
 ![garfield](https://www.crate.zip/garfield.png)
 
-GarfBot is a discord bot that uses OpenAI's generative pre-trained models to produce text and images for your personal entertainment and companionship. There are a few ways you can interact with him on discord, either in a public server or by direct message:
+GarfBot is a discord bot that uses OpenAI's generative pre-trained models to produce text and images for your personal entertainment and companionship.
+<br>There are a few ways you can interact with him on discord, either in a public server or by direct message:
 
 `hey garfield {prompt}`
-Responds with text.
+<br>Responds with text.
 
 `garfpic {prompt}`
-Responds with an image.
+<br>Responds with an image.
 
 `garfping {target}`
-Responds with iputils-ping result from target.
+<br>Responds with iputils-ping result from target.
 
 `garfpic {target}`
-Responds with dns lookup result from target.
+<br>Responds with dns lookup result from target.
 
 `garfhack {target}`
-Responds with nmap scan result from target.
+<br>Responds with nmap scan result from target.
 
 `garfshop {item} {zip}`
-Responds with 10 grocery {item}s from the nearest Kroger location, listed from least to most expensive.
+<br>Responds with 10 grocery {item}s from the nearest Kroger location, listed from least to most expensive.
+
+`garfwiki {query}`
+<br>Garfbot looks up a wikipedia article and will summarize it for you.
+
+`garfqr {text}`
+<br>Create a QR code for any string up to 1000 characters.
+
+`garfbot response {add} {trigger} {response}`
+<br>Add a GarfBot auto response for your server. Use "quotes" if you like.
+
+`garfbot response {remove} {trigger}`
+<br>Remove a GarfBot auto response for your server.
+
+`garfbot response {list}`
+<br>List current GarfBot auto responses for your server.
+
+`garfbot help`
+<br>Show a list of these commands.
 
 Installation
 ======
@@ -38,7 +57,8 @@ GARFBOT_TOKEN = "Discord API token"
 OPENAI_TOKEN = "OpenAI API token"
 ```
 
-I recommend building a docker image using the included DockerFile as a template. Run the container binding /usr/src/app to GarfBot's CWD:
+I recommend building a docker image using the included DockerFile as a template.
+<br>Run the container binding /usr/src/app to GarfBot's CWD:
 
 ```console
 $ docker build -t garfbot .
@@ -53,7 +73,7 @@ If you prefer to install dependencies on you own host and run as a systemd servi
 $ sudo nano /etc/systemd/system/garfbot.service
 ```
 
-Replace {user} with your username:
+Replace $USER with your username:
 
 ```console
 [Unit]
@@ -63,8 +83,8 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
-User={user}
-WorkingDirectory=/home/{user}/garfbot
+User=$USER
+WorkingDirectory=/home/$USER/garfbot
 ExecStart=/usr/bin/python garfbot.py
 
 [Install]
