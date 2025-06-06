@@ -1,0 +1,7 @@
+services:
+  garfbot:
+    image: git.crate.zip/crate/garfbot:latest
+    container_name: garfbot
+    restart: always
+    volumes:
+      - /home/crate/garfbot:/usr/src/app
