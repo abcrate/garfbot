@@ -22,7 +22,7 @@ jobs:
           docker stop garfbot
           docker rm garfbot
           docker build -t git.crate.zip/crate/garfbot:latest .
-          docker compose up -d
+          docker compose up -d -p garfbot
         else
           docker restart garfbot
         fi
