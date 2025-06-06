@@ -1,19 +1,29 @@
-FROM python:3.11.10-bookworm
-
+FROM python:3.11.10-alpine
 WORKDIR /usr/src/app
 
-RUN apt update
-RUN apt install -y iputils-ping
-RUN apt install -y dnsutils
-RUN apt install -y nmap
-RUN apt install -y python3
-RUN apt install -y python3-pip
-RUN pip3 install discord
-RUN pip3 install openai
-RUN pip3 install aiohttp
-RUN pip3 install requests
-RUN pip3 install wikipedia
-RUN pip3 install pillow
-RUN pip3 install qrcode
+RUN apk update && \
+    apk add --no-cache \
+    iputils \
+    bind-tools \
+    nmap \
+    gcc \
+    musl-dev \
+    jpeg-dev \
+    zlib-dev \
+    freetype-dev \
+    lcms2-dev \
+    openjpeg-dev \
+    tiff-dev \
+    tk-dev \
+    tcl-dev
+
+RUN pip3 install --no-cache-dir \
+    discord \
+    openai \
+    aiohttp \
+    requests \
+    wikipedia \
+    pillow \
+    qrcode
 
 CMD [ "python", "garfmain.py" ]

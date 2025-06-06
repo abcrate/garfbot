@@ -1,13 +1,16 @@
 import config
 import asyncio
 import discord
-import subprocess
 
-from garfpy import(
-    logger, is_private,
-    kroger_token, find_store, search_product,
-    garfpic, process_image_requests, generate_chat,
-    aod_message, wikisum, generate_qr)
+from garfpy import (
+    logger,
+    IPUtils,
+    aod_message,
+    generate_qr,
+    Kroger,
+    GarfAI,
+    GarfbotRespond,
+)
 
 
 gapikey = config.GIF_TOKEN
@@ -21,12 +24,20 @@ intents.messages = True
 intents.message_content = True
 garfbot = discord.Client(intents=intents)
 
+garf_respond = GarfbotRespond()
+garfield = GarfAI()
+iputils = IPUtils()
+kroger = Kroger()
+
 
 @garfbot.event
 async def on_ready():
     try:
-        asyncio.create_task(process_image_requests())
-        logger.info(f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}.")
+        garf_respond.load_responses()
+        asyncio.create_task(garfield.process_image_requests())
+        logger.info(
+            f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}."
+        )
     except Exception as e:
         logger.error(e)
 
@@ -36,31 +47,27 @@ async def on_message(message):
     if message.author == garfbot.user:
         return
 
-    if message.content.lower().startswith("hey garfield") or isinstance(message.channel, discord.DMChannel):
-        user = message.author.name
-        server = message.guild.name if message.guild else "Direct Message"
-        question = message.content[12:] if message.content.lower().startswith("hey garfield") else message.content
-        answer = await generate_chat(question)
-        logger.info(f"Chat Request - User: {user}, Server: {server}, Prompt: {question}")
-        await message.channel.send(answer)
+    content = message.content.strip()
+    lower = content.lower()
+    user_name = message.author.name
+    guild_id = message.guild.id
+    guild_name = message.guild.name if message.guild else "Direct Message"
 
-    if message.content.lower().startswith('garfpic '):
-        user = message.author.name
-        server = message.guild.name if message.guild else "Direct Message"
-        prompt = message.content[8:]
-        logger.info(f"Image Request - User: {user}, Server: {server}, Prompt: {prompt}")
-        await message.channel.send(f"`Please wait... image generation queued: {prompt}`")
-        await garfpic(message, prompt)
+    # IP utils
+    if message.guild and lower.startswith(("garfping ", "garfdns ", "garfhack ")):
+        await iputils.scan(message, user_name, guild_name, lower)
 
-    if message.content.lower().startswith('garfwiki '):
-        search_term = message.content[9:]
-        summary = await wikisum(search_term)
+    # Wikipedia
+    if lower.startswith("garfwiki "):
+        query = message.content[9:]
+        summary = await garfield.wikisum(query)
         await message.channel.send(summary)
 
-    if message.content.lower().startswith('garfqr '):
+    # QR codes
+    if lower.startswith("garfqr "):
         text = message.content[7:]
         if len(text) > 1000:
-            await mesage.channel.send("❌ Text too long! Maximum 1000 characters.")
+            await message.channel.send("❌ Text too long! Maximum 1000 characters.")
         else:
             try:
                 qr_code = await generate_qr(text)
@@ -70,91 +77,123 @@ async def on_message(message):
                 logger.error(e)
                 await message.channel.send(e)
 
-    if message.content.lower().startswith("garfping "):
-        try:
-            query = message.content.split()
-            user = message.author.name
-            server = message.guild.name if message.guild else "Direct Message"
-            target = query[-1]
-            logger.info(f"Ping Request - User: {user}, Server: {server}, Target: {target}")
-            if is_private(target):
-                rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
-                await message.channel.send(rejection)
-            else:
-                result = subprocess.run(['ping', '-c', '4', target], capture_output=True, text=True)
-                await message.channel.send(f"`Ping result for {target}:`\n```\n{result.stdout}\n```")
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
-
-    if message.content.lower().startswith("garfdns "):
-        try:
-            query = message.content.split()
-            user = message.author.name
-            server = message.guild.name if message.guild else "Direct Message"
-            target = query[-1]
-            logger.info(f"NSLookup Request - User: {user}, Server: {server}, Target: {target}")
-            if is_private(target):
-                rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
-                await message.channel.send(rejection)
-            else:
-                result = subprocess.run(['nslookup', target], capture_output=True, text=True)
-                await message.channel.send(f"`NSLookup result for {target}:`\n```\n{result.stdout}\n```")
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
-
-    if message.content.lower().startswith("garfhack "):
-        try:
-            query = message.content.split()
-            user = message.author.name
-            server = message.guild.name if message.guild else "Direct Message"
-            target = query[-1]
-            logger.info(f"Nmap Request - User: {user}, Server: {server}, Target: {target}")
-            if is_private(target):
-                rejection = await generate_chat("Hey Garfield, explain to me why I am dumb for trying to hack your private computer network.")
-                await message.channel.send(rejection)
-            else:
-                await message.channel.send(f"`Scanning {target}...`")
-                result = subprocess.run(['nmap', '-Pn', '-O', '-v', target], capture_output=True, text=True)
-                await message.channel.send(f"`Ping result for {target}:`\n```\n{result.stdout}\n```")
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
-
     # Kroger Shopping
-    if message.content.lower().startswith("garfshop "):
+    if lower.startswith("garfshop "):
         try:
-            kroken = kroger_token()
-            kroger_query = message.content.split()
-            product = " ".join(kroger_query[1:-1])
-            zipcode = kroger_query[-1]
-            loc_data = find_store(zipcode, kroken)
-            loc_id = loc_data['data'][0]['locationId']
-            store_name = loc_data['data'][0]['name']
-            product_query = search_product(product, loc_id, kroken)
-            products = product_query['data']
-            sorted_products = sorted(products, key=lambda item: item['items'][0]['price']['regular'])
-            response = f"Prices for `{product}` at `{store_name}` near `{zipcode}`:\n"
-            for item in sorted_products:
-                product_name = item['description']
-                price = item['items'][0]['price']['regular']
-                response += f"- `${price}`: {product_name} \n"
+            query = message.content[9:]
+            response = kroger.garfshop(query)
             await message.channel.send(response)
         except Exception as e:
             await message.channel.send(f"`GarfBot Error: {str(e)}`")
 
-    # Army of Dawn Server only!!
-    if message.guild and message.guild.id == 719605634772893757:
+    # Chats & pics
+    elif lower.startswith("hey garfield") or isinstance(
+        message.channel, discord.DMChannel
+    ):
+        prompt = content[12:] if lower.startswith("hey garfield") else message.content
+        answer = await garfield.generate_chat(prompt)
+        logger.info(
+            f"Chat Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
+        )
+        await message.channel.send(answer)
 
+    elif lower.startswith("garfpic "):
+        prompt = content[8:]
+        logger.info(
+            f"Image Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
+        )
+        await message.channel.send(
+            f"`Please wait... image generation queued: {prompt}`"
+        )
+        await garfield.garfpic(message, prompt)
+
+    # GarfBot help
+    elif lower.strip() == "garfbot help":
+        embed = discord.Embed(title="**Need help?**", color=0x4D4D4D)
+        embed.add_field(
+            name="hey garfield `prompt`", value="*Responds with text.*", inline=True
+        )
+        embed.add_field(
+            name="garfpic `prompt`", value="*Responds with an image.*", inline=True
+        )
+        embed.add_field(
+            name="garfping `target`",
+            value="*Responds with iputils-ping result from target.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfdns `target`",
+            value="*Responds with dns lookup result from target.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfhack `target`",
+            value="*Responds with nmap scan result from target.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfwiki `query`",
+            value="*Garfbot looks up a wikipedia article and will summarize it for you.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfshop `item` `zip`",
+            value="*Responds with 10 grocery items from the nearest Kroger location, cheapest first.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfqr `text`",
+            value="*Create a QR code for any string up to 1000 characters.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfbot response `add` `trigger` `response`",
+            value='*Add a GarfBot auto response for your server. Use "quotes" if you like.*',
+            inline=True,
+        )
+        embed.add_field(
+            name="garfbot response `remove` `trigger`",
+            value="*Remove a GarfBot auto response for your server.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfbot response `list`",
+            value="*List current GarfBot auto responses for your server.*",
+            inline=True,
+        )
+        embed.add_field(
+            name="garfbot help", value="*Show a list of these commands.*", inline=True
+        )
+        await message.channel.send(embed=embed)
+
+    # Army of Dawn Server only!!
+    elif message.guild and message.guild.id == 719605634772893757:
         await aod_message(garfbot, message)
 
+    # Auto-responses
+    elif message.guild:
+        responses = garf_respond.get_responses(guild_id)
 
+        if lower.startswith("garfbot response "):
+            await garf_respond.garfbot_response(message, content)
+            return
+
+        for trigger, response in responses.items():
+            if trigger.lower() in lower:
+                await message.channel.send(response)
+                break
+
+
+# Run GarfBot
 async def garfbot_connect():
     while True:
         try:
             await garfbot.start(garfkey)
         except Exception as e:
-                e = str(e)
-                logger.error(f"Garfbot couldn't connect! {e}")
-                await asyncio.sleep(60)
+            e = str(e)
+            logger.error(f"Garfbot couldn't connect! {e}")
+            await asyncio.sleep(60)
+
 
 if __name__ == "__main__":
     asyncio.run(garfbot_connect())
