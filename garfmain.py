@@ -10,6 +10,7 @@ from garfpy import (
     Kroger,
     GarfAI,
     GarfbotRespond,
+    WeatherAPI,
 )
 
 
@@ -28,6 +29,7 @@ garf_respond = GarfbotRespond()
 garfield = GarfAI()
 iputils = IPUtils()
 kroger = Kroger()
+weather = WeatherAPI()
 
 
 @garfbot.event
@@ -106,6 +108,12 @@ async def on_message(message):
             f"`Please wait... image generation queued: {prompt}`"
         )
         await garfield.garfpic(message, prompt)
+
+    # Weather
+    elif lower.startswith("garfbot weather "):
+        location = lower[16:]
+        embed = await weather.weather(location)
+        await message.channel.send(embed=embed)
 
     # GarfBot help
     elif lower.strip() == "garfbot help":

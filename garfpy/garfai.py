@@ -48,11 +48,11 @@ class GarfAI:
                     async with session.get(image_url) as resp:
                         if resp.status == 200:
                             image_data = await resp.read()
-                            ram_image = io.BytesIO(image_data)
-                            ram_image.seek(0)
+                            image = io.BytesIO(image_data)
+                            image.seek(0)
                             timestamp = message.created_at.strftime("%Y%m%d%H%M%S")
                             filename = f"{timestamp}_generated_image.png"
-                            sendfile = discord.File(fp=ram_image, filename=filename)
+                            sendfile = discord.File(fp=image, filename=filename)
                             try:
                                 await message.channel.send(file=sendfile)
                             except Exception as e:
