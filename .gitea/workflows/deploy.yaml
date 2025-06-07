@@ -8,21 +8,20 @@ jobs:
   Deploy:
     container:
       volumes:
-        - /home/crate/garfbot:/workspace/crate/garfbot/deploy
+        - /home/crate/garfbot:/workspace/crate/garfbot/garfbot
     steps:
-    - name: Pull Garfbot and restart container
-      run: |
-        cd /workspace/crate/garfbot/deploy
-
-        git pull origin main
+      - name: Pull GarfBot and re-deploy
+        run: |
+          cd /home/crate/garfbot
+          
+          git pull origin main
+          
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
         
-        CHANGED=$(git diff --name-only HEAD~1 HEAD)
-        
-        if echo "$CHANGED" | grep -qE "(Dockerfile|requirements\.txt|docker-compose\.yml)"; then
-          docker stop garfbot
-          docker rm garfbot
-          docker build -t git.crate.zip/crate/garfbot:latest .
-          docker compose up -d -p garfbot
-        else
-          docker restart garfbot
-        fi
+          if echo "$CHANGED" | grep -qE "(Dockerfile|requirements\.txt|docker-compose\.yml|\.gitlab/deploy\.yaml)"; then
+            docker compose down -rmi
+            docker build -t git.crate.zip/crate/garfbot:latest .
+            docker compose up -d
+          else
+            docker restart garfbot
+          fi
