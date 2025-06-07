@@ -93,7 +93,6 @@ class WeatherAPI:
             return {"q": f"{city},{state},{country.upper()}"}
 
         else:
-            # Check if last part looks like country code
             if len(parts[-1]) == 2:
                 city_parts = parts[:-1]
                 country = parts[-1]
