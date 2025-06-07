@@ -1,6 +1,7 @@
 import config
 import asyncio
 import discord
+from discord.ext import commands
 
 from garfpy import (
     help,
@@ -24,7 +25,8 @@ intents = discord.Intents.default()
 intents.members = True
 intents.messages = True
 intents.message_content = True
-garfbot = discord.Client(intents=intents)
+
+garfbot = commands.Bot(command_prefix=["garfbot ", "garf", "$"], intents=intents)
 
 garf_respond = GarfbotRespond()
 garfield = GarfAI()
@@ -39,10 +41,80 @@ async def on_ready():
         garf_respond.load_responses()
         asyncio.create_task(garfield.process_image_requests())
         logger.info(
-            f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}."
+            f"Logged in as {garfbot.user.name} running {txtmodel} and {imgmodel}."  # type: ignore
         )
     except Exception as e:
         logger.error(e)
+
+
+@garfbot.command(name="ping")
+async def ping(ctx, *, target):
+    """Ping a target"""
+    logger.info(
+        f"Ping Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Target: {target}"
+    )
+    await iputils.ping(ctx, target)
+
+
+@garfbot.command(name="dns")
+async def dns(ctx, *, target):
+    """DNS lookup for a target"""
+    logger.info(
+        f"NSLookup Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Target: {target}"
+    )
+    await iputils.dns(ctx, target)
+
+
+@garfbot.command(name="hack")
+async def hack(ctx, *, target):
+    """Nmap scan a target"""
+    logger.info(
+        f"Nmap Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Target: {target}"
+    )
+    await iputils.scan(ctx, target)
+
+
+@garfbot.command(name="qr")
+async def garfbot_qr(ctx, *, text):
+    logger.info(
+        f"QR Code Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Text: {text}"
+    )
+    if len(text) > 1000:
+        await ctx.send("❌ Text too long! Maximum 1000 characters.")
+    else:
+        try:
+            qr_code = await generate_qr(text)
+            sendfile = discord.File(fp=qr_code, filename="qrcode.png")
+            await ctx.send(file=sendfile)
+        except Exception as e:
+            logger.error(e)
+            await ctx.send(e)
+
+
+@garfbot.command(name="wiki")
+async def garfbot_wiki(ctx, *, query):
+    summary = await garfield.wikisum(query)
+    await ctx.send(summary)
+
+
+@garfbot.command(name="shop")
+async def garfbot_shop(ctx, *, query):
+    try:
+        response = kroger.garfshop(query)
+        await ctx.send(response)
+    except Exception as e:
+        await ctx.send(f"`GarfBot Error: {str(e)}`")
+
+
+@garfbot.command(name="weather")
+async def garfbot_weather(ctx, *, location):
+    embed = await weather.weather(location)
+    await ctx.send(embed=embed)
+
+
+# @garfbot.command(name="help")
+# async def garfbot_help(ctx):
+#     await help(ctx)
 
 
 @garfbot.event
@@ -56,41 +128,8 @@ async def on_message(message):
     guild_id = message.guild.id
     guild_name = message.guild.name if message.guild else "Direct Message"
 
-    # IP utils
-    if message.guild and lower.startswith(("garfping ", "garfdns ", "garfhack ")):
-        await iputils.scan(message, user_name, guild_name, lower)
-
-    # Wikipedia
-    if lower.startswith("garfwiki "):
-        query = message.content[9:]
-        summary = await garfield.wikisum(query)
-        await message.channel.send(summary)
-
-    # QR codes
-    if lower.startswith("garfqr "):
-        text = message.content[7:]
-        if len(text) > 1000:
-            await message.channel.send("❌ Text too long! Maximum 1000 characters.")
-        else:
-            try:
-                qr_code = await generate_qr(text)
-                sendfile = discord.File(fp=qr_code, filename="qrcode.png")
-                await message.channel.send(file=sendfile)
-            except Exception as e:
-                logger.error(e)
-                await message.channel.send(e)
-
-    # Kroger Shopping
-    if lower.startswith("garfshop "):
-        try:
-            query = message.content[9:]
-            response = kroger.garfshop(query)
-            await message.channel.send(response)
-        except Exception as e:
-            await message.channel.send(f"`GarfBot Error: {str(e)}`")
-
     # Chats & pics
-    elif lower.startswith("hey garfield") or isinstance(
+    if lower.startswith("hey garfield") or isinstance(
         message.channel, discord.DMChannel
     ):
         prompt = content[12:] if lower.startswith("hey garfield") else message.content
@@ -100,7 +139,7 @@ async def on_message(message):
         )
         await message.channel.send(answer)
 
-    elif lower.startswith("garfpic "):
+    if lower.startswith("garfpic "):
         prompt = content[8:]
         logger.info(
             f"Image Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
@@ -109,12 +148,6 @@ async def on_message(message):
             f"`Please wait... image generation queued: {prompt}`"
         )
         await garfield.garfpic(message, prompt)
-
-    # Weather
-    elif lower.startswith("garfbot weather "):
-        location = lower[16:]
-        embed = await weather.weather(location)
-        await message.channel.send(embed=embed)
 
     # GarfBot help
     elif lower.strip() == "garfbot help":
@@ -136,6 +169,8 @@ async def on_message(message):
             if trigger.lower() in lower:
                 await message.channel.send(response)
                 break
+
+    await garfbot.process_commands(message)
 
 
 # Run GarfBot

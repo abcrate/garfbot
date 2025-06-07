@@ -18,13 +18,13 @@ class WeatherAPI:
             else:
                 return {"zip": location}
 
-        parts = location.split()
+        params = location.split()
 
-        if len(parts) == 1:
-            return {"q": f"{parts[0]},US"}
+        if len(params) == 1:
+            return {"q": f"{params[0]},US"}
 
-        elif len(parts) == 2:
-            city, second = parts
+        elif len(params) == 2:
+            city, second = params
 
             if len(second) == 2 and second.upper() not in [
                 "AK",
@@ -88,26 +88,26 @@ class WeatherAPI:
             else:
                 return {"q": f"{city},{second},US"}
 
-        elif len(parts) == 3:
-            city, state, country = parts
+        elif len(params) == 3:
+            city, state, country = params
             return {"q": f"{city},{state},{country.upper()}"}
 
         else:
-            if len(parts[-1]) == 2:
-                city_parts = parts[:-1]
-                country = parts[-1]
+            if len(params[-1]) == 2:
+                city_parts = params[:-1]
+                country = params[-1]
                 city_name = " ".join(city_parts)
                 return {"q": f"{city_name},{country.upper()}"}
 
-            elif len(parts) >= 2 and len(parts[-1]) == 2 and len(parts[-2]) <= 2:
-                city_parts = parts[:-2]
-                state = parts[-2]
-                country = parts[-1]
+            elif len(params) >= 2 and len(params[-1]) == 2 and len(params[-2]) <= 2:
+                city_parts = params[:-2]
+                state = params[-2]
+                country = params[-1]
                 city_name = " ".join(city_parts)
                 return {"q": f"{city_name},{state},{country.upper()}"}
 
             else:
-                city_name = " ".join(parts)
+                city_name = " ".join(params)
                 return {"q": f"{city_name},US"}
 
     async def get_weather(self, location, units="metric"):

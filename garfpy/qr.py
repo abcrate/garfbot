@@ -47,7 +47,7 @@ async def generate_qr(text):
 
     qr = qrcode.QRCode(
         version=version,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.constants.ERROR_CORRECT_L, # type: ignore
         box_size=box_size,
         border=4,
     )
@@ -58,7 +58,7 @@ async def generate_qr(text):
     qr_image = qr.make_image(fill_color="black", back_color="white")
 
     img_buffer = BytesIO()
-    qr_image.save(img_buffer, format="PNG")
+    qr_image.save(img_buffer, format="PNG") # type: ignore
     img_buffer.seek(0)
 
     return img_buffer
