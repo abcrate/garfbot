@@ -1,142 +1,203 @@
 import discord
-import requests
-import json
+import aiohttp
+import config
+from garfpy import logger
+
 
 class WeatherAPI:
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(self, api_key=None):
+        self.api_key = api_key or config.WEATHER_TOKEN
         self.base_url = "https://api.openweathermap.org/data/2.5/weather"
-    
-    def get_weather_by_zip(self, zip_code, country_code='US', units='metric'):
-        """
-        Get weather data by zip code
-        
-        Args:
-            zip_code (str): ZIP code
-            country_code (str): Country code (default: 'US')
-            units (str): 'metric', 'imperial', or 'standard'
-        """
+
+    def parse_location(self, location):
+        location = location.strip().lower()
+
+        if location.isdigit():
+            if len(location) == 5:
+                return {"zip": f"{location},US"}
+            else:
+                return {"zip": location}
+
+        parts = location.split()
+
+        if len(parts) == 1:
+            return {"q": f"{parts[0]},US"}
+
+        elif len(parts) == 2:
+            city, second = parts
+
+            if len(second) == 2 and second.upper() not in [
+                "AK",
+                "AL",
+                "AR",
+                "AZ",
+                "CA",
+                "CO",
+                "CT",
+                "DE",
+                "FL",
+                "GA",
+                "HI",
+                "IA",
+                "ID",
+                "IL",
+                "IN",
+                "KS",
+                "KY",
+                "LA",
+                "MA",
+                "MD",
+                "ME",
+                "MI",
+                "MN",
+                "MO",
+                "MS",
+                "MT",
+                "NC",
+                "ND",
+                "NE",
+                "NH",
+                "NJ",
+                "NM",
+                "NV",
+                "NY",
+                "OH",
+                "OK",
+                "OR",
+                "PA",
+                "RI",
+                "SC",
+                "SD",
+                "TN",
+                "TX",
+                "UT",
+                "VA",
+                "VT",
+                "WA",
+                "WI",
+                "WV",
+                "WY",
+                "DC",
+                "AS",
+                "GU",
+                "MP",
+                "PR",
+                "VI",
+            ]:
+                return {"q": f"{city},{second.upper()}"}
+            else:
+                return {"q": f"{city},{second},US"}
+
+        elif len(parts) == 3:
+            city, state, country = parts
+            return {"q": f"{city},{state},{country.upper()}"}
+
+        else:
+            # Check if last part looks like country code
+            if len(parts[-1]) == 2:
+                city_parts = parts[:-1]
+                country = parts[-1]
+                city_name = " ".join(city_parts)
+                return {"q": f"{city_name},{country.upper()}"}
+
+            elif len(parts) >= 2 and len(parts[-1]) == 2 and len(parts[-2]) <= 2:
+                city_parts = parts[:-2]
+                state = parts[-2]
+                country = parts[-1]
+                city_name = " ".join(city_parts)
+                return {"q": f"{city_name},{state},{country.upper()}"}
+
+            else:
+                city_name = " ".join(parts)
+                return {"q": f"{city_name},US"}
+
+    async def get_weather(self, location, units="metric"):
+        location_params = self.parse_location(location)
+
         params = {
-            'zip': f'{zip_code},{country_code}',
-            'appid': self.api_key,
-            'units': units
+            **location_params,
+            "appid": self.api_key,
+            "units": units,
         }
-        
+
         try:
-            response = requests.get(self.base_url, params=params)
-            response.raise_for_status()
-            return response.json()
-        
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching weather data: {e}")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.base_url, params=params) as response:
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientError as e:
+            logger.error(f"Error fetching weather data for '{location}': {e}")
             return None
-    
-def weather_embed(self, weather_data):
-    if not weather_data:
+
+    def weather_embed(self, weather_data):
+        if not weather_data:
+            embed = discord.Embed(
+                title="❌ Error",
+                description="Could not fetch weather data",
+                color=discord.Color.red(),
+            )
+            return embed
+
+        weather_emojis = {
+            "clear sky": "☀️",
+            "few clouds": "🌤️",
+            "scattered clouds": "⛅",
+            "broken clouds": "☁️",
+            "shower rain": "🌦️",
+            "rain": "🌧️",
+            "thunderstorm": "⛈️",
+            "snow": "❄️",
+            "mist": "🌫️",
+        }
+
+        condition = weather_data["weather"][0]["description"].lower()
+        emoji = weather_emojis.get(condition, "🌍")
+
         embed = discord.Embed(
-            title="❌ Error",
-            description="Could not fetch weather data",
-            color=discord.Color.red()
+            title=f"{emoji} Weather in {weather_data['name']}",
+            description=f"{weather_data['weather'][0]['description'].title()}",
+            color=discord.Color.blue(),
         )
+
+        embed.add_field(
+            name="🌡️ Temperature",
+            value=f"{weather_data['main']['temp']}°C\nFeels like {weather_data['main']['feels_like']}°C",
+            inline=True,
+        )
+
+        embed.add_field(
+            name="💧 Humidity",
+            value=f"{weather_data['main']['humidity']}%",
+            inline=True,
+        )
+
+        embed.add_field(
+            name="🗜️ Pressure",
+            value=f"{weather_data['main']['pressure']} hPa",
+            inline=True,
+        )
+
+        if "wind" in weather_data:
+            embed.add_field(
+                name="💨 Wind Speed",
+                value=f"{weather_data['wind']['speed']} m/s",
+                inline=True,
+            )
+
+        if "visibility" in weather_data:
+            embed.add_field(
+                name="👁️ Visibility",
+                value=f"{weather_data['visibility'] / 1000} km",
+                inline=True,
+            )
+
+        embed.set_footer(
+            text=f"Lat: {weather_data['coord']['lat']}, Lon: {weather_data['coord']['lon']}"
+        )
+
         return embed
-    
-    weather_emojis = {
-        'clear sky': '☀️',
-        'few clouds': '🌤️',
-        'scattered clouds': '⛅',
-        'broken clouds': '☁️',
-        'shower rain': '🌦️',
-        'rain': '🌧️',
-        'thunderstorm': '⛈️',
-        'snow': '❄️',
-        'mist': '🌫️'
-    }
-    
-    condition = weather_data['weather'][0]['description'].lower()
-    emoji = weather_emojis.get(condition, '🌍')
-    
-    embed = discord.Embed(
-        title=f"{emoji} Weather in {weather_data['name']}",
-        description=f"{weather_data['weather'][0]['description'].title()}",
-        color=discord.Color.blue()
-    )
-    
-    embed.add_field(
-        name="🌡️ Temperature", 
-        value=f"{weather_data['main']['temp']}°C\nFeels like {weather_data['main']['feels_like']}°C", 
-        inline=True
-    )
-    
-    embed.add_field(
-        name="💧 Humidity", 
-        value=f"{weather_data['main']['humidity']}%", 
-        inline=True
-    )
-    
-    embed.add_field(
-        name="🗜️ Pressure", 
-        value=f"{weather_data['main']['pressure']} hPa", 
-        inline=True
-    )
-    
-    if 'wind' in weather_data:
-        embed.add_field(
-            name="💨 Wind Speed", 
-            value=f"{weather_data['wind']['speed']} m/s", 
-            inline=True
-        )
-    
-    if 'visibility' in weather_data:
-        embed.add_field(
-            name="👁️ Visibility", 
-            value=f"{weather_data['visibility']/1000} km", 
-            inline=True
-        )
-    
-    embed.set_footer(
-        text=f"Lat: {weather_data['coord']['lat']}, Lon: {weather_data['coord']['lon']}"
-    )
-    
-    return embed
 
-@commands.command(name='weather')
-async def weather_command(self, ctx, zip_code: str, country_code: str = 'US'):
-    """
-    Get weather by zip code
-    Usage: !weather 10001 US
-    """
-    await ctx.typing()
-    
-    weather_data = await self.get_weather_by_zip(zip_code, country_code)
-    embed = self.create_weather_embed(weather_data)
-    
-    await ctx.send(embed=embed)
-
-
-
-    # def display_weather(self, weather_data):
-    #     """Pretty print weather information"""
-    #     if not weather_data:
-    #         print("No weather data available")
-    #         return
-        
-    #     print(f"\n🌤️  Weather for {weather_data['name']}")
-    #     print(f"Temperature: {weather_data['main']['temp']}°C")
-    #     print(f"Feels like: {weather_data['main']['feels_like']}°C")
-    #     print(f"Condition: {weather_data['weather'][0]['description'].title()}")
-    #     print(f"Humidity: {weather_data['main']['humidity']}%")
-    #     print(f"Pressure: {weather_data['main']['pressure']} hPa")
-    #     if 'visibility' in weather_data:
-    #         print(f"Visibility: {weather_data['visibility']/1000} km")
-
-# if __name__ == "__main__":
-#     API_KEY = "x"
-    
-#     weather = WeatherAPI(API_KEY)
-    
-#     zip_codes = ['10001', '90210', '60601']
-    
-#     for zip_code in zip_codes:
-#         data = weather.get_weather_by_zip(zip_code)
-#         weather.display_weather(data)
-#         print("-" * 40)
+    async def weather(self, location):
+        weather_data = await self.get_weather(location)
+        embed = self.weather_embed(weather_data)
+        return embed

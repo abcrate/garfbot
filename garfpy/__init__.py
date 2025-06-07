@@ -8,3 +8,4 @@ from .respond import GarfbotRespond
 from .aod import aod_message
 from .qr import generate_qr
 from .iputils import IPUtils
+from .weather import WeatherAPI
