@@ -19,7 +19,7 @@ jobs:
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
         
           if echo "$CHANGED" | grep -qE "(Dockerfile|requirements\.txt|docker-compose\.yml|\.gitea/workflows/deploy\.yaml)"; then
-            docker compose down --rmi
+            docker compose down
             docker build -t git.crate.zip/crate/garfbot:latest .
             docker compose up -d
           else
