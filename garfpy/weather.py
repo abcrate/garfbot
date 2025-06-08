@@ -110,7 +110,7 @@ class WeatherAPI:
                 city_name = " ".join(params)
                 return {"q": f"{city_name},US"}
 
-    async def get_weather(self, location, units="metric"):
+    async def get_weather(self, ctx, location, units="metric"):
         location_params = self.parse_location(location)
 
         params = {
@@ -126,6 +126,7 @@ class WeatherAPI:
                     return await response.json()
         except aiohttp.ClientError as e:
             logger.error(f"Error fetching weather data for '{location}': {e}")
+            ctx.send(f"`Error fetching weather data for '{location}': {e}`")
             return None
 
     def weather_embed(self, weather_data):
@@ -196,7 +197,8 @@ class WeatherAPI:
 
         return embed
 
-    async def weather(self, location):
-        weather_data = await self.get_weather(location)
-        embed = self.weather_embed(weather_data)
-        return embed
+    async def weather(self, ctx, location):
+        weather_data = await self.get_weather(ctx, location)
+        if weather_data:
+            embed = self.weather_embed(weather_data)
+            await ctx.send(embed=embed)

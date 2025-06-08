@@ -27,6 +27,7 @@ intents.messages = True
 intents.message_content = True
 
 garfbot = commands.Bot(command_prefix=["garfbot ", "garf", "$"], intents=intents)
+garfbot.remove_command("help")
 
 garf_respond = GarfbotRespond()
 garfield = GarfAI()
@@ -48,7 +49,7 @@ async def on_ready():
 
 
 @garfbot.command(name="ping")
-async def ping(ctx, *, target):
+async def garfbot_ping(ctx, *, target):
     """Ping a target"""
     logger.info(
         f"Ping Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Target: {target}"
@@ -57,7 +58,7 @@ async def ping(ctx, *, target):
 
 
 @garfbot.command(name="dns")
-async def dns(ctx, *, target):
+async def garfbot_dns(ctx, *, target):
     """DNS lookup for a target"""
     logger.info(
         f"NSLookup Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Target: {target}"
@@ -66,7 +67,7 @@ async def dns(ctx, *, target):
 
 
 @garfbot.command(name="hack")
-async def hack(ctx, *, target):
+async def garfbot_hack(ctx, *, target):
     """Nmap scan a target"""
     logger.info(
         f"Nmap Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Target: {target}"
@@ -108,13 +109,30 @@ async def garfbot_shop(ctx, *, query):
 
 @garfbot.command(name="weather")
 async def garfbot_weather(ctx, *, location):
-    embed = await weather.weather(location)
-    await ctx.send(embed=embed)
+    await weather.weather(ctx, location)
 
 
-# @garfbot.command(name="help")
-# async def garfbot_help(ctx):
-#     await help(ctx)
+@garfbot.command(name="chat")
+async def garfchat(ctx, *, prompt):
+    answer = await garfield.generate_chat(prompt)
+    logger.info(
+        f"Chat Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Prompt: {prompt}"
+    )
+    await ctx.send(answer)
+
+
+@garfbot.command(name="pic")
+async def garfpic(ctx, *, prompt):
+    logger.info(
+        f"Image Request - User: {ctx.author.name}, Server: {ctx.guild.name}, Prompt: {prompt}"
+    )
+    await ctx.send(f"`Please wait... image generation queued: {prompt}`")
+    await garfield.garfpic(ctx, prompt)
+
+
+@garfbot.command(name="help")
+async def garfbot_help(ctx):
+    await help(ctx)
 
 
 @garfbot.event
@@ -124,41 +142,22 @@ async def on_message(message):
 
     content = message.content.strip()
     lower = content.lower()
-    user_name = message.author.name
-    guild_id = message.guild.id
-    guild_name = message.guild.name if message.guild else "Direct Message"
 
     # Chats & pics
     if lower.startswith("hey garfield") or isinstance(
         message.channel, discord.DMChannel
     ):
-        prompt = content[12:] if lower.startswith("hey garfield") else message.content
-        answer = await garfield.generate_chat(prompt)
-        logger.info(
-            f"Chat Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
-        )
-        await message.channel.send(answer)
-
-    if lower.startswith("garfpic "):
-        prompt = content[8:]
-        logger.info(
-            f"Image Request - User: {user_name}, Server: {guild_name}, Prompt: {prompt}"
-        )
-        await message.channel.send(
-            f"`Please wait... image generation queued: {prompt}`"
-        )
-        await garfield.garfpic(message, prompt)
-
-    # GarfBot help
-    elif lower.strip() == "garfbot help":
-        await help(message)
-
-    # Army of Dawn Server only!!
-    elif message.guild and message.guild.id == 719605634772893757:
-        await aod_message(garfbot, message)
+        ctx = await garfbot.get_context(message)
+        await garfchat(ctx, prompt=content)
 
     # Auto-responses
     elif message.guild:
+        guild_id = message.guild.id
+
+        # Army of Dawn Server only!!
+        if guild_id == 719605634772893757:
+            await aod_message(garfbot, message)
+
         responses = garf_respond.get_responses(guild_id)
 
         if lower.startswith("garfbot response "):
