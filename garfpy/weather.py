@@ -126,7 +126,7 @@ class WeatherAPI:
                     return await response.json()
         except aiohttp.ClientError as e:
             logger.error(f"Error fetching weather data for '{location}': {e}")
-            ctx.send(f"`Error fetching weather data for '{location}': {e}`")
+            await ctx.send(f"`Error fetching weather data for '{location}': {e}`")
             return None
 
     def weather_embed(self, weather_data):
