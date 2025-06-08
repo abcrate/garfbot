@@ -26,7 +26,7 @@ intents.members = True
 intents.messages = True
 intents.message_content = True
 
-garfbot = commands.Bot(command_prefix=["garfbot ", "garf", "$"], intents=intents)
+garfbot = commands.Bot(command_prefix=["Garfbot ", "garfbot ","Garf", "garf", "$"], intents=intents)
 garfbot.remove_command("help")
 
 garf_respond = GarfbotRespond()
@@ -132,7 +132,8 @@ async def garfpic(ctx, *, prompt):
 
 @garfbot.command(name="help")
 async def garfbot_help(ctx):
-    await help(ctx)
+    if ctx:
+        await help(ctx)
 
 
 @garfbot.event
